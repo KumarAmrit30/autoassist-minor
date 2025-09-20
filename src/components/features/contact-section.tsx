@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 
 interface ContactInfo {
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   details: string[];
 }

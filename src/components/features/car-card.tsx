@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   Heart,
   Bookmark,
   Star,
   Fuel,
   Users,
-  Gauge,
   Cog,
   Eye,
   GitCompare,
@@ -115,10 +115,11 @@ export default function CarCard({
               Loading image...
             </div>
           )}
-          <img
+          <Image
             src={car.images?.[0] || "/api/placeholder/400/300"}
             alt={`${car.brand} ${car.model}`}
-            className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${
+            fill
+            className={`object-cover transition-all duration-500 group-hover:scale-110 ${
               isImageLoaded ? "opacity-100" : "opacity-0"
             }`}
             onLoad={() => setIsImageLoaded(true)}

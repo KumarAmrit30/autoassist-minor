@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const priceMax = parseFloat(searchParams.get("priceMax") || "1000");
 
     // Build filter object
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
 
     if (search) {
       filter.$or = [
@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
     const total = await db.collection(COLLECTIONS.CARS).countDocuments(filter);
 
     // Transform MongoDB documents to Car objects
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transformedCars: Car[] = cars.map((car: any) => ({
       _id: car._id.toString(),
 

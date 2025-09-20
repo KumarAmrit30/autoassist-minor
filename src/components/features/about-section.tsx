@@ -64,7 +64,7 @@ export default function AboutSection() {
             To democratize access to comprehensive car information and provide
             AI-powered recommendations that help everyone find their perfect
             vehicle. We believe that buying a car should be exciting, not
-            overwhelming, and we're here to make that vision a reality.
+            overwhelming, and we&apos;re here to make that vision a reality.
           </p>
         </motion.div>
 
