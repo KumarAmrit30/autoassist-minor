@@ -7,22 +7,20 @@
 Add these environment variables in your Vercel project settings:
 
 ```bash
-# MongoDB Connection (Required)
-MONGODB_URI=mongodb+srv:
 
-# NextAuth Configuration (Required for future auth features)
-NEXTAUTH_URL=https://your-project-name.vercel.app
-NEXTAUTH_SECRET=your-secure-random-secret-key-here
 
 # Optional: AI/ML API Configuration (for future ML integration)
 AI_API_ENDPOINT=https://your-ai-api-endpoint.com
 AI_API_KEY=your-ai-api-key-here
 ```
 
+**Note**: NextAuth dependencies have been removed to avoid dependency conflicts during deployment. Authentication features will be added in Phase 2.
+
 ### Deployment Steps
 
 1. **Connect GitHub Repository**: Link your GitHub repository to Vercel
 2. **Configure Project Settings**:
+
    - Framework Preset: Next.js
    - Root Directory: `./`
    - Build Command: `npm run build`
@@ -37,6 +35,7 @@ AI_API_KEY=your-ai-api-key-here
 ### Build Configuration
 
 The project is configured with:
+
 - ✅ Next.js 15.5.3 with App Router
 - ✅ TypeScript with strict checking
 - ✅ Tailwind CSS v4
@@ -54,6 +53,7 @@ The project is configured with:
 ### Post-Deployment Verification
 
 After deployment, verify:
+
 1. ✅ Homepage loads correctly
 2. ✅ Car data is fetched from MongoDB
 3. ✅ Images load properly
@@ -64,6 +64,7 @@ After deployment, verify:
 ### Troubleshooting
 
 **Common Issues:**
+
 - **MongoDB Connection**: Ensure IP whitelist includes 0.0.0.0/0 for Vercel
 - **Environment Variables**: Double-check all required variables are set
 - **Build Errors**: Check build logs in Vercel dashboard
@@ -72,6 +73,7 @@ After deployment, verify:
 ### Performance Metrics
 
 Expected performance:
+
 - **First Load JS**: ~171 kB
 - **Build Time**: ~2-3 seconds
 - **API Response**: <500ms for car data
