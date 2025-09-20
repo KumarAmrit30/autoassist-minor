@@ -31,6 +31,8 @@ export default function CarCard({
   onToggleWishlist,
 }: CarCardProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const getFuelTypeColor = (transmissionType: string) => {
     switch (transmissionType) {
@@ -53,6 +55,63 @@ export default function CarCard({
     { label: "LED Headlights", available: car.ledHeadlights },
     { label: "+2 more", available: true },
   ].filter((feature) => feature.available);
+
+  // Get current image URL with fallback logic
+  const getCurrentImageUrl = () => {
+    const validateUrl = (url: string) => {
+      if (!url) return false;
+      // Check if it's a relative URL (starts with /) or a valid absolute URL
+      if (url.startsWith("/")) return true;
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const fallbackImages = [
+      ...(Array.isArray(car.images)
+        ? car.images
+        : car.images
+        ? [car.images]
+        : []),
+      "/api/placeholder/400/300",
+    ].filter((url) => url && validateUrl(url));
+
+    return fallbackImages[currentImageIndex] || "/api/placeholder/400/300";
+  };
+
+  // Handle image load error - try next fallback
+  const handleImageError = () => {
+    setImageError(true);
+    setIsImageLoaded(false);
+
+    const validateUrl = (url: string) => {
+      if (!url) return false;
+      if (url.startsWith("/")) return true;
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const fallbackImages = [
+      ...(Array.isArray(car.images)
+        ? car.images
+        : car.images
+        ? [car.images]
+        : []),
+      "/api/placeholder/400/300",
+    ].filter((url) => url && validateUrl(url));
+
+    if (currentImageIndex < fallbackImages.length - 1) {
+      setCurrentImageIndex(currentImageIndex + 1);
+      setImageError(false);
+    }
+  };
 
   return (
     <motion.div
@@ -109,20 +168,33 @@ export default function CarCard({
         </div>
 
         {/* Car Image */}
-        <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
-          {!isImageLoaded && (
-            <div className="text-muted-foreground text-sm">
+        <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center relative">
+          {!isImageLoaded && !imageError && (
+            <div className="text-muted-foreground text-sm animate-pulse">
               Loading image...
             </div>
           )}
+          {imageError && currentImageIndex === 1 && (
+            <div className="text-muted-foreground text-sm text-center p-4">
+              <div className="text-2xl mb-2">🚗</div>
+              <div>Image not available</div>
+            </div>
+          )}
           <Image
-            src={car.images?.[0] || "/api/placeholder/400/300"}
+            src={getCurrentImageUrl()}
             alt={`${car.brand} ${car.model}`}
             fill
+            priority={false}
+            loading="lazy"
             className={`object-cover transition-all duration-500 group-hover:scale-110 ${
-              isImageLoaded ? "opacity-100" : "opacity-0"
+              isImageLoaded && !imageError ? "opacity-100" : "opacity-0"
             }`}
-            onLoad={() => setIsImageLoaded(true)}
+            onLoad={() => {
+              setIsImageLoaded(true);
+              setImageError(false);
+            }}
+            onError={handleImageError}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           />
         </div>
       </div>

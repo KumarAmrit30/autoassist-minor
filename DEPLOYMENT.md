@@ -8,7 +8,7 @@ Add these environment variables in your Vercel project settings:
 
 ```bash
 # MongoDB Connection (Required)
-MONGODB_URI=mongodb+srv://iamritkumar30_db_user:K33mdccAhbk5WSGJ@cluster0.b4jojkj.mongodb.net/autoassist
+MONGODB_URI=mongodb+srv:
 
 # NextAuth Configuration (Required for future auth features)
 NEXTAUTH_URL=https://your-project-name.vercel.app

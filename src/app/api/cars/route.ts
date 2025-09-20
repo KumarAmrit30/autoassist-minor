@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase, COLLECTIONS } from "@/lib/mongodb";
 import { Car } from "@/types/car";
+import { generateCarImageUrls } from "@/lib/car-images";
 
 export async function GET(request: NextRequest) {
   try {
@@ -269,7 +270,20 @@ export async function GET(request: NextRequest) {
       isInWishlist: false,
       rating: car.rating || 4.0,
       reviewCount: car.reviewCount || Math.floor(Math.random() * 5000),
-      images: car.images || ["/api/placeholder/400/300"],
+      images: (() => {
+        // Ensure images is always an array
+        const existingImages =
+          car.images || car.Image_URL || car.image_url || car.imageUrl;
+        if (existingImages) {
+          return Array.isArray(existingImages)
+            ? existingImages
+            : [existingImages];
+        }
+        return generateCarImageUrls(
+          car.Identification_Brand,
+          car.Identification_Model
+        );
+      })(),
     }));
 
     return NextResponse.json({

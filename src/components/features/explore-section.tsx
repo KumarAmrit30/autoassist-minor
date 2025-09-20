@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Car } from "@/types/car";
+import { preloadCarImages } from "@/lib/car-images";
 import CarCard from "./car-card";
 
 interface ExploreSectionProps {
@@ -23,6 +24,13 @@ export default function ExploreSection({
   onToggleWishlist,
 }: ExploreSectionProps) {
   const [displayedCars, setDisplayedCars] = useState(4);
+
+  // Preload images for better performance
+  useEffect(() => {
+    if (cars.length > 0) {
+      preloadCarImages(cars.slice(0, 4));
+    }
+  }, [cars]);
 
   const loadMoreCars = () => {
     setDisplayedCars((prev) => Math.min(prev + 4, cars.length));

@@ -12,21 +12,38 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
-    domains: ['localhost'],
+    domains: [
+      "localhost",
+      "imgd.aeplcdn.com", // AutoPortal CDN
+      "stimg.cardekho.com", // CarDekho CDN
+      "images.unsplash.com", // Unsplash for fallbacks
+      "via.placeholder.com", // Placeholder service
+    ],
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**',
+        protocol: "https",
+        hostname: "imgd.aeplcdn.com",
+        pathname: "/**",
       },
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '3000',
+        protocol: "https",
+        hostname: "stimg.cardekho.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "3000",
       },
     ],
   },
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
+    optimizePackageImports: ["lucide-react", "framer-motion"],
   },
 };
 
