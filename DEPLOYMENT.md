@@ -7,7 +7,8 @@
 Add these environment variables in your Vercel project settings:
 
 ```bash
-
+   # MongoDB Connection (Required)
+   MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE
 
 # Optional: AI/ML API Configuration (for future ML integration)
 AI_API_ENDPOINT=https://your-ai-api-endpoint.com
