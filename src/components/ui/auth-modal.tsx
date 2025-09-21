@@ -2,7 +2,20 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Eye, EyeOff, User, Mail, Lock, ArrowLeft } from "lucide-react";
+import {
+  X,
+  Eye,
+  EyeOff,
+  User,
+  Mail,
+  Lock,
+  ArrowLeft,
+  AlertCircle,
+} from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { LoginCredentials, SignupCredentials } from "@/types/user";
+import { useRedirect } from "@/hooks/useRedirect";
+import UserNotFoundModal from "./user-not-found-modal";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,40 +23,153 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+  const { login, signup } = useAuth();
+  const { redirectAfterAuth } = useRedirect();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showUserNotFound, setShowUserNotFound] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
+    rememberMe: false,
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = (): string | null => {
+    if (!formData.email || !formData.password) {
+      return "Email and password are required";
+    }
+
+    if (isSignUp) {
+      if (!formData.name) {
+        return "Name is required";
+      }
+      if (formData.password !== formData.confirmPassword) {
+        return "Passwords do not match";
+      }
+      if (formData.password.length < 8) {
+        return "Password must be at least 8 characters long";
+      }
+    }
+
+    return null;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Auth form submitted:", { isSignUp, formData });
-    // TODO: Implement authentication logic
-    alert(isSignUp ? "Sign up successful!" : "Sign in successful!");
-    onClose();
+    setError(null);
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (isSignUp) {
+        const signupData: SignupCredentials = {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+        };
+        await signup(signupData);
+      } else {
+        const loginData: LoginCredentials = {
+          email: formData.email,
+          password: formData.password,
+          rememberMe: formData.rememberMe,
+        };
+        await login(loginData);
+      }
+
+      // Success - close modal, reset form, and redirect
+      onClose();
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        rememberMe: false,
+      });
+      setIsSignUp(false);
+
+      // Redirect after successful authentication
+      setTimeout(() => {
+        if (isSignUp) {
+          // New users: redirect to home with welcome modal
+          redirectAfterAuth("/?welcome=true");
+        } else {
+          // Returning users: redirect to intended page or home
+          redirectAfterAuth("/");
+        }
+      }, 100);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Authentication failed. Please try again.";
+
+      // Handle specific error cases
+      if (errorMessage.includes("Invalid email or password") && !isSignUp) {
+        setShowUserNotFound(true);
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
-    setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      rememberMe: false,
+    });
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setError(null);
+    setShowUserNotFound(false);
+  };
+
+  const handleUserNotFoundSignUp = () => {
+    setShowUserNotFound(false);
+    setIsSignUp(true);
+    setError(null);
+    // Keep the email from the failed login attempt
+    setFormData((prev) => ({
+      ...prev,
+      password: "",
+      confirmPassword: "",
+      rememberMe: false,
+    }));
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          key="auth-modal"
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -99,6 +225,18 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             {/* Form */}
             <div className="px-6 pb-6">
+              {/* Error Display */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center space-x-2 text-red-500"
+                >
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm">{error}</span>
+                </motion.div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {isSignUp && (
                   <div>
@@ -167,6 +305,25 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   </div>
                 </div>
 
+                {!isSignUp && (
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      name="rememberMe"
+                      checked={formData.rememberMe}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary focus:ring-2"
+                    />
+                    <label
+                      htmlFor="rememberMe"
+                      className="text-sm text-muted-foreground cursor-pointer"
+                    >
+                      Remember me
+                    </label>
+                  </div>
+                )}
+
                 {isSignUp && (
                   <div>
                     <label className="block text-sm font-medium mb-2">
@@ -202,13 +359,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                 {!isSignUp && (
                   <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
-                      />
-                      <span className="text-muted-foreground">Remember me</span>
-                    </label>
+                    
                     <button
                       type="button"
                       className="text-primary hover:text-primary/80 font-medium"
@@ -220,12 +371,32 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                 <motion.button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 disabled:from-primary/60 disabled:to-accent/60 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2"
+                  whileHover={!isLoading ? { scale: 1.02 } : {}}
+                  whileTap={!isLoading ? { scale: 0.98 } : {}}
                 >
-                  <span>{isSignUp ? "Sign Up" : "Sign In"}</span>
-                  <ArrowLeft className="w-4 h-4 rotate-180" />
+                  {isLoading ? (
+                    <>
+                      <motion.div
+                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      />
+                      <span>
+                        {isSignUp ? "Creating Account..." : "Signing In..."}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{isSignUp ? "Sign Up" : "Sign In"}</span>
+                      <ArrowLeft className="w-4 h-4 rotate-180" />
+                    </>
+                  )}
                 </motion.button>
               </form>
 
@@ -285,6 +456,16 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           </motion.div>
         </motion.div>
+      )}
+
+      {/* User Not Found Modal */}
+      {showUserNotFound && (
+        <UserNotFoundModal
+          key="user-not-found-modal"
+          email={formData.email}
+          onSignUpClick={handleUserNotFoundSignUp}
+          onClose={() => setShowUserNotFound(false)}
+        />
       )}
     </AnimatePresence>
   );

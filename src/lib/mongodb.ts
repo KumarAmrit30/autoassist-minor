@@ -39,6 +39,7 @@ export async function getDatabase(): Promise<Db> {
 export const COLLECTIONS = {
   CARS: "cars",
   USERS: "users",
+  SESSIONS: "sessions",
   FAVORITES: "favorites",
   WISHLISTS: "wishlists",
   COMPARISONS: "comparisons",
