@@ -9,7 +9,9 @@
     "lint": "eslint",
     "deploy:dev": "./deploy.sh dev",
     "deploy:prod": "./deploy.sh prod",
-    "deploy:help": "./deploy.sh help"
+    "deploy:help": "./deploy.sh help",
+    "setup:env": "./setup-env.sh",
+    "generate:secrets": "node generate-secrets.js"
   },
   "dependencies": {
     "framer-motion": "^12.23.16",
