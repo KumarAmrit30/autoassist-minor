@@ -28,7 +28,7 @@ export default function ExploreSection({
   // Preload images for better performance
   useEffect(() => {
     if (cars.length > 0) {
-      preloadCarImages(cars.slice(0, 4));
+      preloadCarImages();
     }
   }, [cars]);
 
@@ -61,51 +61,70 @@ export default function ExploreSection({
 
         {/* Car Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {isLoading
-            ? // Loading skeletons
-              Array.from({ length: 8 }).map((_, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-card border border-border rounded-xl overflow-hidden h-[400px]"
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                >
-                  <div className="animate-pulse">
-                    <div className="aspect-[4/3] bg-muted"></div>
-                    <div className="p-6 space-y-4">
-                      <div className="space-y-2">
-                        <div className="h-6 bg-muted rounded w-3/4"></div>
-                        <div className="h-4 bg-muted rounded w-1/2"></div>
-                      </div>
-                      <div className="h-8 bg-muted rounded w-1/3"></div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="h-4 bg-muted rounded"></div>
-                        <div className="h-4 bg-muted rounded"></div>
-                        <div className="h-4 bg-muted rounded"></div>
-                      </div>
-                      <div className="h-10 bg-muted rounded"></div>
+          {isLoading ? (
+            // Loading skeletons
+            Array.from({ length: 8 }).map((_, index) => (
+              <motion.div
+                key={index}
+                className="bg-card border border-border rounded-xl overflow-hidden h-[400px]"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
+                <div className="animate-pulse">
+                  <div className="aspect-[4/3] bg-muted"></div>
+                  <div className="p-6 space-y-4">
+                    <div className="space-y-2">
+                      <div className="h-6 bg-muted rounded w-3/4"></div>
+                      <div className="h-4 bg-muted rounded w-1/2"></div>
                     </div>
+                    <div className="h-8 bg-muted rounded w-1/3"></div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="h-4 bg-muted rounded"></div>
+                      <div className="h-4 bg-muted rounded"></div>
+                      <div className="h-4 bg-muted rounded"></div>
+                    </div>
+                    <div className="h-10 bg-muted rounded"></div>
                   </div>
-                </motion.div>
-              ))
-            : cars.slice(0, displayedCars).map((car, index) => (
-                <motion.div
-                  key={car._id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <CarCard
-                    car={car}
-                    onViewDetails={onViewDetails}
-                    onCompare={onCompare}
-                    onToggleFavorite={onToggleFavorite}
-                    onToggleWishlist={onToggleWishlist}
-                  />
-                </motion.div>
-              ))}
+                </div>
+              </motion.div>
+            ))
+          ) : cars.length === 0 ? (
+            // No data state
+            <div className="col-span-full text-center py-16">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="max-w-md mx-auto"
+              >
+                <div className="text-6xl mb-4">🚗</div>
+                <h3 className="text-xl font-semibold mb-2">No Cars Found</h3>
+                <p className="text-muted-foreground">
+                  We couldn&apos;t find any cars matching your criteria. Try
+                  adjusting your search or check back later.
+                </p>
+              </motion.div>
+            </div>
+          ) : (
+            cars.slice(0, displayedCars).map((car, index) => (
+              <motion.div
+                key={car._id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <CarCard
+                  car={car}
+                  onViewDetails={onViewDetails}
+                  onCompare={onCompare}
+                  onToggleFavorite={onToggleFavorite}
+                  onToggleWishlist={onToggleWishlist}
+                />
+              </motion.div>
+            ))
+          )}
         </div>
 
         {/* Load More Button */}
@@ -123,7 +142,7 @@ export default function ExploreSection({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Load More Cars ({cars.length - displayedCars} remaining)
+              Load More Cars
             </motion.button>
           </motion.div>
         )}

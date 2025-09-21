@@ -279,10 +279,7 @@ export async function GET(request: NextRequest) {
             ? existingImages
             : [existingImages];
         }
-        return generateCarImageUrls(
-          car.Identification_Brand,
-          car.Identification_Model
-        );
+        return generateCarImageUrls();
       })(),
     }));
 

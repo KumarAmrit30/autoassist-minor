@@ -11,7 +11,6 @@ import ExploreSection from "@/components/features/explore-section";
 import FeaturesSection from "@/components/features/features-section";
 import AboutSection from "@/components/features/about-section";
 import ContactSection from "@/components/features/contact-section";
-import { sampleCars } from "@/data/sample-cars";
 import { Car } from "@/types/car";
 
 export default function Home() {
@@ -38,14 +37,12 @@ export default function Home() {
           const data = await response.json();
           setCars(data.cars);
         } else {
-          // Fallback to sample data if API fails
-          console.warn("Failed to fetch cars from API, using sample data");
-          setCars(sampleCars);
+          console.error("Failed to fetch cars from API");
+          setCars([]);
         }
       } catch (error) {
         console.error("Error fetching cars:", error);
-        // Fallback to sample data
-        setCars(sampleCars);
+        setCars([]);
       } finally {
         setIsLoadingCars(false);
       }
@@ -61,10 +58,25 @@ export default function Home() {
     sessionStorage.setItem("hasVisited", "true");
   };
 
-  const handleSearch = (query: string) => {
-    console.log("Search query:", query);
-    // TODO: Implement AI search functionality
-    // For now, this will be a placeholder
+  const handleSearch = async (query: string) => {
+    setIsLoadingCars(true);
+    try {
+      const response = await fetch(
+        `/api/cars?search=${encodeURIComponent(query)}&limit=8`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setCars(data.cars);
+      } else {
+        console.error("Failed to search cars");
+        setCars([]);
+      }
+    } catch (error) {
+      console.error("Error searching cars:", error);
+      setCars([]);
+    } finally {
+      setIsLoadingCars(false);
+    }
   };
 
   const handleFilterClick = () => {

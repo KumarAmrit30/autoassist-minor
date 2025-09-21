@@ -12,13 +12,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
-    domains: [
-      "localhost",
-      "imgd.aeplcdn.com", // AutoPortal CDN
-      "stimg.cardekho.com", // CarDekho CDN
-      "images.unsplash.com", // Unsplash for fallbacks
-      "via.placeholder.com", // Placeholder service
-    ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: "https",
