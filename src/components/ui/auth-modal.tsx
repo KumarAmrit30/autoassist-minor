@@ -359,7 +359,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                 {!isSignUp && (
                   <div className="flex items-center justify-between text-sm">
-                    
                     <button
                       type="button"
                       className="text-primary hover:text-primary/80 font-medium"
