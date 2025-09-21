@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy:dev": "./deploy.sh dev",
+    "deploy:prod": "./deploy.sh prod",
+    "deploy:help": "./deploy.sh help"
   },
   "dependencies": {
     "framer-motion": "^12.23.16",

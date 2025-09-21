@@ -1,81 +1,190 @@
 # AutoAssist Deployment Guide
 
-## Vercel Deployment Configuration
+## 🚀 Modern Dev/Prod Deployment Workflow
 
-### Required Environment Variables
+This project uses a modern deployment strategy with separate development and production environments using Vercel's automatic deployment features.
 
-Add these environment variables in your Vercel project settings:
+### Branch Strategy
 
-```bash
-   # MongoDB Connection (Required)
-   MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE
+- **`dev` branch**: Development environment with preview deployments
+- **`main` branch**: Production environment with live deployments
+- **Feature branches**: Create from `dev` branch for new features
 
-# Optional: AI/ML API Configuration (for future ML integration)
-AI_API_ENDPOINT=https://your-ai-api-endpoint.com
-AI_API_KEY=your-ai-api-key-here
+### Deployment Workflow
+
+```mermaid
+graph LR
+    A[Feature Branch] --> B[dev branch]
+    B --> C[Preview Deployment]
+    B --> D[main branch]
+    D --> E[Production Deployment]
 ```
 
-**Note**: NextAuth dependencies have been removed to avoid dependency conflicts during deployment. Authentication features will be added in Phase 2.
+## 🛠️ Quick Start
 
-### Deployment Steps
+### 1. Development Deployment
+```bash
+# Make sure you're on dev branch
+git checkout dev
 
-1. **Connect GitHub Repository**: Link your GitHub repository to Vercel
-2. **Configure Project Settings**:
+# Deploy to development environment
+npm run deploy:dev
+```
 
-   - Framework Preset: Next.js
-   - Root Directory: `./`
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-   - Install Command: `npm install`
-   - Development Command: `npm run dev`
+### 2. Production Deployment
+```bash
+# Make sure you're on dev branch
+git checkout dev
 
-3. **Add Environment Variables**: Go to Project Settings > Environment Variables and add the variables above
+# Deploy to production (merges dev -> main)
+npm run deploy:prod
+```
 
-4. **Deploy**: Click Deploy or push to your main branch
+### 3. Manual Deployment Commands
+```bash
+# Using the deployment script
+./deploy.sh dev     # Deploy to development
+./deploy.sh prod    # Deploy to production
+./deploy.sh help    # Show help
+```
 
-### Build Configuration
+## ⚙️ Vercel Configuration
 
-The project is configured with:
+### Automatic Deployments
+- **Production**: Automatically deploys when you push to `main` branch
+- **Preview**: Automatically deploys when you push to `dev` branch or any other branch
+- **Pull Requests**: Creates preview deployments for PRs
 
-- ✅ Next.js 15.5.3 with App Router
-- ✅ TypeScript with strict checking
-- ✅ Tailwind CSS v4
-- ✅ MongoDB integration
-- ✅ Image optimization
-- ✅ Build optimization with Turbopack
+### Environment Variables Setup
 
-### Performance Optimizations
+#### In Vercel Dashboard:
 
-- **Image Optimization**: Using Next.js Image component
-- **Package Imports**: Optimized for lucide-react and framer-motion
-- **Static Generation**: Pages are statically generated where possible
-- **API Routes**: Dynamic API routes for car data and placeholder images
+1. **Production Environment** (main branch):
+   ```bash
+   MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE_PROD
+   AI_API_ENDPOINT=https://your-prod-ai-api-endpoint.com
+   AI_API_KEY=your-prod-ai-api-key-here
+   NODE_ENV=production
+   NEXT_PUBLIC_APP_ENV=production
+   ```
 
-### Post-Deployment Verification
+2. **Preview Environment** (dev branch and PRs):
+   ```bash
+   MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE_DEV
+   AI_API_ENDPOINT=https://your-dev-ai-api-endpoint.com
+   AI_API_KEY=your-dev-ai-api-key-here
+   NODE_ENV=development
+   NEXT_PUBLIC_APP_ENV=preview
+   ```
 
-After deployment, verify:
+#### Local Development (.env.local):
+```bash
+MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE_DEV
+AI_API_ENDPOINT=https://your-dev-ai-api-endpoint.com
+AI_API_KEY=your-dev-ai-api-key-here
+NODE_ENV=development
+NEXT_PUBLIC_APP_ENV=development
+```
 
-1. ✅ Homepage loads correctly
-2. ✅ Car data is fetched from MongoDB
-3. ✅ Images load properly
-4. ✅ Navigation works smoothly
-5. ✅ Responsive design on mobile
-6. ✅ API endpoints respond correctly
+## 🔧 GitHub Actions Workflow
 
-### Troubleshooting
+The project includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that:
 
-**Common Issues:**
+- Runs on pushes to `main` and `dev` branches
+- Runs on pull requests to `main`
+- Performs linting and building
+- Deploys to appropriate Vercel environments
 
-- **MongoDB Connection**: Ensure IP whitelist includes 0.0.0.0/0 for Vercel
-- **Environment Variables**: Double-check all required variables are set
-- **Build Errors**: Check build logs in Vercel dashboard
-- **API Errors**: Verify MongoDB permissions and connection string
+### Required GitHub Secrets:
+- `VERCEL_TOKEN`: Your Vercel API token
+- `VERCEL_ORG_ID`: Your Vercel organization ID
+- `VERCEL_PROJECT_ID`: Your Vercel project ID
 
-### Performance Metrics
+## 📋 Deployment Process
 
-Expected performance:
+### Development Workflow:
+1. Create feature branch from `dev`
+2. Make changes and test locally
+3. Push to feature branch
+4. Create PR to `dev` branch
+5. Review and merge to `dev`
+6. Automatic preview deployment triggers
 
+### Production Workflow:
+1. Ensure `dev` branch is stable and tested
+2. Run `npm run deploy:prod` or `./deploy.sh prod`
+3. Script automatically:
+   - Switches to `main` branch
+   - Merges `dev` into `main`
+   - Pushes to `main`
+   - Triggers production deployment
+   - Switches back to `dev`
+
+## 🌐 URLs and Domains
+
+### Automatic URLs:
+- **Production**: `https://your-project.vercel.app`
+- **Preview**: `https://your-project-git-dev.vercel.app`
+- **Feature branches**: `https://your-project-git-feature-branch.vercel.app`
+
+### Custom Domains (Optional):
+- **Production**: `https://yourdomain.com`
+- **Development**: `https://dev.yourdomain.com`
+
+## 🔍 Monitoring and Verification
+
+### Post-Deployment Checklist:
+- [ ] Homepage loads correctly
+- [ ] Car data fetches from correct database
+- [ ] Images load properly
+- [ ] Navigation works smoothly
+- [ ] Responsive design on mobile
+- [ ] API endpoints respond correctly
+- [ ] Environment variables are correctly set
+
+### Performance Metrics:
 - **First Load JS**: ~171 kB
 - **Build Time**: ~2-3 seconds
 - **API Response**: <500ms for car data
 - **Lighthouse Score**: 90+ across all metrics
+
+## 🚨 Troubleshooting
+
+### Common Issues:
+
+**MongoDB Connection**:
+- Ensure IP whitelist includes `0.0.0.0/0` for Vercel
+- Verify connection string format
+- Check database permissions
+
+**Environment Variables**:
+- Double-check all required variables are set in Vercel dashboard
+- Ensure variables are assigned to correct environments
+- Verify variable names match exactly
+
+**Build Errors**:
+- Check build logs in Vercel dashboard
+- Run `npm run build` locally to test
+- Verify all dependencies are in package.json
+
+**Deployment Script Issues**:
+- Ensure you're on the correct branch
+- Check for uncommitted changes
+- Verify Git remote is configured correctly
+
+### Getting Help:
+1. Check Vercel deployment logs
+2. Run deployment script with verbose output
+3. Test build locally with `npm run build`
+4. Verify environment variables in Vercel dashboard
+
+## 📚 Additional Resources
+
+- [Vercel Documentation](https://vercel.com/docs)
+- [Next.js Deployment](https://nextjs.org/docs/deployment)
+- [GitHub Actions](https://docs.github.com/en/actions)
+- [MongoDB Atlas](https://docs.atlas.mongodb.com/)
+
+---
+
+**Note**: This deployment setup provides a modern, automated workflow that ensures reliable deployments while maintaining separation between development and production environments.
