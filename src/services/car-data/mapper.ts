@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Dynamic MongoDB car documents contain hundreds of vendor-specific keys,
+// so we intentionally use `any` while normalizing them into the typed Car model.
 import { Car } from "@/types/car";
 
 /**

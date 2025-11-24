@@ -108,18 +108,19 @@ export class CarFilterService {
   /**
    * Build MongoDB query from filters
    */
-  buildMongoQuery(filters: CarFilters): any {
-    const query: any = {};
+  buildMongoQuery(filters: CarFilters): Record<string, unknown> {
+    const query: Record<string, unknown> = {};
 
     // Price filters (using database field name)
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
-      query.Price_Lakhs = {};
+      const priceRange: Record<string, number> = {};
       if (filters.minPrice !== undefined) {
-        query.Price_Lakhs.$gte = filters.minPrice;
+        priceRange.$gte = filters.minPrice;
       }
       if (filters.maxPrice !== undefined) {
-        query.Price_Lakhs.$lte = filters.maxPrice;
+        priceRange.$lte = filters.maxPrice;
       }
+      query.Price_Lakhs = priceRange;
     }
 
     // Brand filter (using database field name)

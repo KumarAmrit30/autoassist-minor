@@ -11,13 +11,11 @@ import {
   USE_CASE_CONFIGS,
   KNOWN_BRANDS,
   BODY_TYPES,
-  PRICE_PATTERNS,
-  MILEAGE_PATTERNS,
 } from "./config";
 
 export class GeminiClient {
   private ai: GoogleGenerativeAI;
-  private model: any;
+  private model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>;
 
   constructor() {
     if (!GEMINI_CONFIG.apiKey) {
@@ -108,7 +106,7 @@ export class GeminiClient {
     let useCase: ChatContext["useCase"] = "general";
     let maxMatches = 0;
 
-    for (const [key, config] of Object.entries(USE_CASE_CONFIGS)) {
+    for (const config of Object.values(USE_CASE_CONFIGS)) {
       const matches = config.keywords.filter((keyword) =>
         lowerQuery.includes(keyword.toLowerCase())
       ).length;
@@ -253,6 +251,7 @@ export class GeminiClient {
     requirements: ExtractedRequirements,
     query: string
   ): string {
+    void query;
     if (cars.length === 0) {
       return "I couldn't find any cars matching your exact requirements. Try adjusting your budget or preferences for better results.";
     }
@@ -308,7 +307,7 @@ export class GeminiClient {
   /**
    * Normalize filters to ensure proper types
    */
-  private normalizeFilters(filters: any): CarFilters {
+  private normalizeFilters(filters: Partial<CarFilters>): CarFilters {
     const normalized: CarFilters = {};
 
     if (filters.maxPrice !== null && filters.maxPrice !== undefined) {

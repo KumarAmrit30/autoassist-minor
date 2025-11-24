@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     // Build response
     const response: SearchResponse = {
       cars: filteredCars,
-      total: filteredCars.length,
+      total,
       page,
       limit: maxLimit,
       filters,
@@ -155,8 +155,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
 
     // Sort
-    const sortBy = (searchParams.get("sortBy") as "price" | "mileage" | "rating" | "year") || "price";
-    const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "asc";
+    const sortBy =
+      (searchParams.get("sortBy") as "price" | "mileage" | "rating" | "year") ||
+      "price";
+    const sortOrder =
+      (searchParams.get("sortOrder") as "asc" | "desc") || "asc";
 
     // Get database
     const db = await getDatabase();
@@ -207,7 +210,7 @@ export async function GET(request: NextRequest) {
     // Build response
     const response: SearchResponse = {
       cars,
-      total: cars.length,
+      total,
       page,
       limit: maxLimit,
       filters,

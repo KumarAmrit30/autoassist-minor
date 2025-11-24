@@ -64,7 +64,7 @@ export class CarScoringService {
     score += this.calculateMileageScore(car, filters) * weights.mileage;
 
     // Safety score (0-20 points)
-    score += this.calculateSafetyScore(car, filters) * weights.safety;
+    score += this.calculateSafetyScore(car) * weights.safety;
 
     // Features score (0-15 points)
     score += this.calculateFeaturesScore(car) * weights.features;
@@ -173,7 +173,7 @@ export class CarScoringService {
   /**
    * Calculate safety score
    */
-  private calculateSafetyScore(car: Car, filters: CarFilters): number {
+  private calculateSafetyScore(car: Car): number {
     let score = 0;
 
     // Airbags (0-40 points)
