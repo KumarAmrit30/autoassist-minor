@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const favoriteCarIds = user.favorites || [];
     const favoriteCars = await db
       .collection(COLLECTIONS.CARS)
-      .find({ _id: { $in: favoriteCarIds.map((id) => new ObjectId(id)) } })
+      .find({ _id: { $in: favoriteCarIds.map((id: string) => new ObjectId(id)) } })
       .toArray();
 
     return NextResponse.json({
@@ -150,7 +150,7 @@ export async function DELETE(request: NextRequest) {
       {
         $pull: { favorites: carId },
         $set: { updatedAt: new Date() },
-      }
+      } as unknown as Record<string, unknown>
     );
 
     if (result.matchedCount === 0) {

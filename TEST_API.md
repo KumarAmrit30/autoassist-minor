@@ -172,7 +172,7 @@ You'll know it's working when you see:
 
 1. **Test with your Gemini API key** (add to `.env.local`)
 2. **Try the suggestions endpoint**: `curl http://localhost:3000/api/ai/suggestions`
-3. **Integrate with your frontend** using the examples in `example-usage.ts`
+3. **Integrate with your frontend** using the API endpoints documented in this file
 
 ---
 

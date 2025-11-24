@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase, COLLECTIONS } from "@/lib/mongodb";
-import { Car } from "@/types/car";
 import { geminiClient } from "@/services/ai";
 import { carFilterService, carScoringService } from "@/services/car-data";
 import { mapDatabaseCarsToAppCars } from "@/services/car-data/mapper";

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const mongoQuery = carFilterService.buildMongoQuery(filters);
 
     // Build sort criteria (using database field names)
-    const sortCriteria: any = {};
+    const sortCriteria: Record<string, 1 | -1> = {};
     switch (sortBy) {
       case "price":
         sortCriteria.Price_Lakhs = sortOrder === "asc" ? 1 : -1;
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
 
     // Parse query parameters into filters
-    const filters: any = {};
+    const filters: Record<string, unknown> = {};
 
     // Price filters
     const minPrice = searchParams.get("minPrice");
@@ -155,8 +155,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
 
     // Sort
-    const sortBy = (searchParams.get("sortBy") as any) || "price";
-    const sortOrder = (searchParams.get("sortOrder") as any) || "asc";
+    const sortBy = (searchParams.get("sortBy") as "price" | "mileage" | "rating" | "year") || "price";
+    const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "asc";
 
     // Get database
     const db = await getDatabase();
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
     const mongoQuery = carFilterService.buildMongoQuery(filters);
 
     // Build sort criteria (using database field names)
-    const sortCriteria: any = {};
+    const sortCriteria: Record<string, 1 | -1> = {};
     switch (sortBy) {
       case "price":
         sortCriteria.Price_Lakhs = sortOrder === "asc" ? 1 : -1;
@@ -207,7 +207,7 @@ export async function GET(request: NextRequest) {
     // Build response
     const response: SearchResponse = {
       cars,
-      total,
+      total: cars.length,
       page,
       limit: maxLimit,
       filters,
