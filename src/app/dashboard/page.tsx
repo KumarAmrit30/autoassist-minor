@@ -55,6 +55,33 @@ export default function Dashboard() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center space-y-6">
+        <div>
+          <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
+            Dashboard unavailable
+          </p>
+          <h1 className="mt-2 text-3xl font-bold">Authentication disabled</h1>
+        </div>
+        <p className="max-w-xl text-muted-foreground">
+          We temporarily removed authentication to unblock deployments, so
+          personalized dashboards are not accessible. You can keep exploring the
+          public experience while we restore sign-in support.
+        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-medium transition-colors"
+        >
+          <Search className="w-4 h-4" />
+          <span>Return home</span>
+        </Link>
+      </div>
+    );
+  }
+
+  const firstName = user.name.split(" ")[0] || user.name;
+
   const quickActions = [
     {
       icon: Search,
@@ -158,7 +185,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold">
-                  Welcome back, {user?.name?.split(" ")[0]}! 👋
+                  Welcome back, {firstName}! 👋
                 </h1>
                 <p className="text-white/80">Ready to find your next car?</p>
               </div>

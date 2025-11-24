@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useMemo, useCallback } from "react";
-import { signIn, signOut, useSession } from "next-auth/react";
 import {
   AuthContextType,
   User,
@@ -10,85 +9,52 @@ import {
 } from "@/types/user";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AUTH_DISABLED_MESSAGE =
+  "Authentication is disabled for this deployment build.";
 
-type SessionUser = NonNullable<ReturnType<typeof useSession>["data"]>["user"];
-
-function mapSessionUser(
-  sessionUser?: SessionUser
-): Omit<User, "password"> | null {
-  if (!sessionUser) {
-    return null;
-  }
-
-  return {
-    _id: (sessionUser as { id?: string }).id,
-    name: sessionUser?.name ?? "AutoAssist User",
-    email: sessionUser?.email ?? "",
-    role: "user",
-    isEmailVerified: true,
-    avatar: sessionUser?.image ?? undefined,
-    preferences: undefined,
-    favorites: (sessionUser as { favorites?: string[] }).favorites ?? [],
-    wishlist: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    lastLoginAt: new Date(),
-    isActive: true,
-  };
+function warnAuthDisabled(action: string) {
+  console.warn(`${action} skipped: ${AUTH_DISABLED_MESSAGE}`);
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status, update } = useSession();
-
-  const login = useCallback(async (_credentials?: LoginCredentials) => {
-    await signIn("google", { callbackUrl: "/" });
+  const login = useCallback(async (credentials?: LoginCredentials) => {
+    void credentials;
+    warnAuthDisabled("login");
   }, []);
 
-  const signup = useCallback(async (_credentials?: SignupCredentials) => {
-    await signIn("google", { callbackUrl: "/" });
+  const signup = useCallback(async (credentials?: SignupCredentials) => {
+    void credentials;
+    warnAuthDisabled("signup");
   }, []);
 
-  const logout = useCallback(async (_logoutFromAllDevices?: boolean) => {
-    await signOut({ callbackUrl: "/" });
+  const logout = useCallback(async (logoutFromAllDevices?: boolean) => {
+    void logoutFromAllDevices;
+    warnAuthDisabled("logout");
   }, []);
 
   const refreshAuth = useCallback(async () => {
-    try {
-      await update();
-      return true;
-    } catch (error) {
-      console.error("Session refresh failed:", error);
-      return false;
-    }
-  }, [update]);
+    warnAuthDisabled("session refresh");
+    return false;
+  }, []);
 
-  const updateProfile = useCallback(
-    async (_profileData: Partial<User>) => {
-      await update();
-    },
-    [update]
-  );
+  const updateProfile = useCallback(async (profileData: Partial<User>) => {
+    void profileData;
+    warnAuthDisabled("profile update");
+  }, []);
 
-  const value = useMemo<AuthContextType>(() => {
-    return {
-      user: mapSessionUser(session?.user),
-      isLoading: status === "loading",
-      isAuthenticated: status === "authenticated",
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user: null,
+      isLoading: false,
+      isAuthenticated: false,
       login,
       signup,
       logout,
       refreshAuth,
       updateProfile,
-    };
-  }, [
-    session?.user,
-    status,
-    login,
-    signup,
-    logout,
-    refreshAuth,
-    updateProfile,
-  ]);
+    }),
+    [login, signup, logout, refreshAuth, updateProfile]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

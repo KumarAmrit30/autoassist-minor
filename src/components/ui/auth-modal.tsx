@@ -10,7 +10,7 @@ import {
   Sparkles,
   Clock3,
 } from "lucide-react";
-import { signIn, useSession } from "next-auth/react";
+import { useAuth } from "@/contexts/auth-context";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -44,8 +44,7 @@ const benefitItems: BenefitItem[] = [
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { status } = useSession();
-  const isAuthenticated = status === "authenticated";
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated && isOpen) {
@@ -53,30 +52,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
   }, [isAuthenticated, isOpen, onClose]);
 
-  const handleGoogleAuth = async () => {
-    try {
-      setIsProcessing(true);
-      const response = await signIn("google", {
-        callbackUrl: "/",
-        redirect: false,
-      });
-
-      if (response?.error) {
-        console.error("Google sign-in failed:", response.error);
-        setIsProcessing(false);
-        return;
-      }
-
-      if (response?.url) {
-        window.location.href = response.url;
-        return;
-      }
-
+  const handleGoogleAuth = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
       setIsProcessing(false);
-    } catch (error) {
-      console.error("Google sign-in failed:", error);
-      setIsProcessing(false);
-    }
+    }, 800);
+    console.warn(
+      "Authentication attempt blocked: sign-in is disabled for this deployment."
+    );
   };
 
   const heroCopy = isSignUp
@@ -161,10 +144,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <motion.button
                   type="button"
                   onClick={handleGoogleAuth}
-                  disabled={isProcessing || status === "loading"}
-                  className="mt-6 flex w-full items-center justify-between rounded-2xl border border-border bg-background/80 px-4 py-3 text-left transition-all duration-200 hover:border-primary/50 disabled:cursor-not-allowed disabled:opacity-75"
-                  whileHover={{ scale: isProcessing ? 1 : 1.01 }}
-                  whileTap={{ scale: isProcessing ? 1 : 0.99 }}
+                  disabled
+                  className="mt-6 flex w-full items-center justify-between rounded-2xl border border-dashed border-border bg-background/60 px-4 py-3 text-left transition-all duration-200 cursor-not-allowed opacity-70"
                 >
                   <div className="flex items-center space-x-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card">
@@ -172,15 +153,22 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     </span>
                     <div>
                       <p className="text-base font-semibold">
-                        {isProcessing ? "Connecting..." : "Continue with Google"}
+                        {isProcessing
+                          ? "Hold tight..."
+                          : "Sign-in temporarily disabled"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        You’ll be redirected to Google’s secure consent screen.
+                        We disabled authentication while we troubleshoot
+                        deployment issues.
                       </p>
                     </div>
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground" />
                 </motion.button>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  We&apos;ll re-enable login once deployment issues are resolved.
+                  Existing accounts remain safe.
+                </p>
               </div>
 
               <div className="rounded-2xl border border-border/70 bg-background/60 p-5">

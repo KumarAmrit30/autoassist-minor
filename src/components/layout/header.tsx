@@ -199,7 +199,7 @@ export default function Header({ onSignInClick }: HeaderProps) {
                 </div>
               ) : (
                 <motion.button
-                  // onClick={onSignInClick}
+                  onClick={onSignInClick}
                   className="hidden sm:flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors duration-200"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -213,7 +213,11 @@ export default function Header({ onSignInClick }: HeaderProps) {
                 onClick={() => setIsMobileMenuOpen((prev) => !prev)}
                 className="lg:hidden p-2 text-foreground hover:text-primary transition-colors duration-200"
               >
-                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {isMobileMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
               </button>
             </div>
           </div>
@@ -256,7 +260,9 @@ export default function Header({ onSignInClick }: HeaderProps) {
                     </div>
                     <div>
                       <p className="text-sm font-medium">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {user?.email}
+                      </p>
                     </div>
                   </div>
 
