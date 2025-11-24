@@ -56,11 +56,24 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const handleGoogleAuth = async () => {
     try {
       setIsProcessing(true);
-      const response = await signIn("google", { callbackUrl: "/" });
+      const response = await signIn("google", {
+        callbackUrl: "/",
+        redirect: false,
+      });
+
       if (response?.error) {
         console.error("Google sign-in failed:", response.error);
         setIsProcessing(false);
+        return;
       }
+
+      if (response?.url) {
+        window.location.href = response.url;
+        return;
+      }
+
+      // Fallback: release loading state if we get an unexpected response
+      setIsProcessing(false);
     } catch (error) {
       console.error("Google sign-in failed:", error);
       setIsProcessing(false);
