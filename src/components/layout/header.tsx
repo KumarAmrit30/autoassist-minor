@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Search,
   User,
@@ -28,15 +28,11 @@ export default function Header({ onSignInClick }: HeaderProps) {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -65,14 +61,12 @@ export default function Header({ onSignInClick }: HeaderProps) {
     setIsMobileMenuOpen(false);
   };
 
-  const handleLogoutConfirm = async (logoutFromAllDevices: boolean = false) => {
+  const handleLogoutConfirm = async (logoutFromAllDevices = false) => {
     await logout(logoutFromAllDevices);
     setShowLogoutConfirmation(false);
   };
 
-  const handleLogoutCancel = () => {
-    setShowLogoutConfirmation(false);
-  };
+  const handleLogoutCancel = () => setShowLogoutConfirmation(false);
 
   const navigationItems = [
     { label: "Home", href: "hero" },
@@ -95,7 +89,6 @@ export default function Header({ onSignInClick }: HeaderProps) {
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo */}
             <motion.div
               className="flex items-center space-x-2 cursor-pointer"
               onClick={() => scrollToSection("hero")}
@@ -110,7 +103,6 @@ export default function Header({ onSignInClick }: HeaderProps) {
               </h1>
             </motion.div>
 
-            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-8">
               {navigationItems.map((item, index) => (
                 <motion.button
@@ -128,10 +120,9 @@ export default function Header({ onSignInClick }: HeaderProps) {
               ))}
             </nav>
 
-            {/* Search Bar (Desktop) */}
             <div className="hidden md:flex items-center space-x-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search for cars..."
@@ -140,12 +131,11 @@ export default function Header({ onSignInClick }: HeaderProps) {
               </div>
             </div>
 
-            {/* User Menu / Sign In Button */}
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <div className="relative hidden sm:block user-menu-container">
                   <motion.button
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    onClick={() => setIsUserMenuOpen((prev) => !prev)}
                     className="flex items-center space-x-2 bg-muted hover:bg-muted/80 text-foreground px-3 py-2 rounded-lg transition-colors duration-200"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -156,7 +146,6 @@ export default function Header({ onSignInClick }: HeaderProps) {
                     <span className="text-sm font-medium">{user?.name}</span>
                   </motion.button>
 
-                  {/* User Dropdown Menu */}
                   {isUserMenuOpen && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
@@ -220,21 +209,15 @@ export default function Header({ onSignInClick }: HeaderProps) {
                 </motion.button>
               )}
 
-              {/* Mobile Menu Button */}
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                onClick={() => setIsMobileMenuOpen((prev) => !prev)}
                 className="lg:hidden p-2 text-foreground hover:text-primary transition-colors duration-200"
               >
-                {isMobileMenuOpen ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
+                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
             </div>
           </div>
 
-          {/* Mobile Menu */}
           <motion.div
             className={`lg:hidden overflow-hidden ${
               isMobileMenuOpen ? "max-h-screen" : "max-h-0"
@@ -244,9 +227,8 @@ export default function Header({ onSignInClick }: HeaderProps) {
             transition={{ duration: 0.3 }}
           >
             <div className="py-4 space-y-4 border-t border-border">
-              {/* Mobile Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search for cars..."
@@ -254,7 +236,6 @@ export default function Header({ onSignInClick }: HeaderProps) {
                 />
               </div>
 
-              {/* Mobile Navigation */}
               <nav className="space-y-2">
                 {navigationItems.map((item) => (
                   <button
@@ -267,7 +248,6 @@ export default function Header({ onSignInClick }: HeaderProps) {
                 ))}
               </nav>
 
-              {/* Mobile User Menu / Sign In */}
               {isAuthenticated ? (
                 <div className="sm:hidden space-y-2">
                   <div className="flex items-center space-x-3 px-4 py-2 bg-muted rounded-lg">
@@ -276,9 +256,7 @@ export default function Header({ onSignInClick }: HeaderProps) {
                     </div>
                     <div>
                       <p className="text-sm font-medium">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {user?.email}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
                     </div>
                   </div>
 
@@ -333,7 +311,6 @@ export default function Header({ onSignInClick }: HeaderProps) {
         </div>
       </motion.header>
 
-      {/* Logout Confirmation Modal */}
       <LogoutConfirmationModal
         isOpen={showLogoutConfirmation}
         onConfirm={handleLogoutConfirm}
