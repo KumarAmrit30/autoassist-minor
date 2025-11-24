@@ -1,5 +1,6 @@
-import ClientPageWrapper from "@/components/ClientPageWrapper";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return <ClientPageWrapper />;
+export default function RootRedirectPage() {
+  redirect("/home");
 }
+

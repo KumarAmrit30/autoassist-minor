@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import LogoutConfirmationModal from "@/components/ui/logout-confirmation-modal";
+import { usePathname, useRouter } from "next/navigation";
 
 interface HeaderProps {
   onSignInClick: () => void;
@@ -26,6 +27,8 @@ export default function Header({ onSignInClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -47,12 +50,15 @@ export default function Header({ onSignInClick }: HeaderProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isUserMenuOpen]);
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setIsMobileMenuOpen(false);
-    }
+  const handleNavigation = (href: string) => {
+    setIsMobileMenuOpen(false);
+    router.push(href);
+  };
+
+  const isActiveRoute = (href: string) => {
+    if (!href) return false;
+    if (pathname === href) return true;
+    return pathname.startsWith(`${href}/`);
   };
 
   const handleLogoutClick = () => {
@@ -69,10 +75,11 @@ export default function Header({ onSignInClick }: HeaderProps) {
   const handleLogoutCancel = () => setShowLogoutConfirmation(false);
 
   const navigationItems = [
-    { label: "Home", href: "hero" },
-    { label: "Explore", href: "explore" },
-    { label: "About", href: "about" },
-    { label: "Contact", href: "contact" },
+    { label: "Home", href: "/home" },
+    { label: "Explore", href: "/explore" },
+    { label: "Features", href: "/features" },
+    { label: "About", href: "/about" },
+    { label: "Contact", href: "/contact" },
   ];
 
   return (
@@ -91,7 +98,7 @@ export default function Header({ onSignInClick }: HeaderProps) {
           <div className="flex items-center justify-between h-16 lg:h-20">
             <motion.div
               className="flex items-center space-x-2 cursor-pointer"
-              onClick={() => scrollToSection("hero")}
+              onClick={() => handleNavigation("/home")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -107,8 +114,12 @@ export default function Header({ onSignInClick }: HeaderProps) {
               {navigationItems.map((item, index) => (
                 <motion.button
                   key={item.label}
-                  onClick={() => scrollToSection(item.href)}
-                  className="text-foreground/80 hover:text-primary transition-colors duration-200 font-medium"
+                  onClick={() => handleNavigation(item.href)}
+                  className={`font-medium transition-colors duration-200 ${
+                    isActiveRoute(item.href)
+                      ? "text-primary"
+                      : "text-foreground/80 hover:text-primary"
+                  }`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   initial={{ opacity: 0, y: -20 }}
@@ -244,8 +255,12 @@ export default function Header({ onSignInClick }: HeaderProps) {
                 {navigationItems.map((item) => (
                   <button
                     key={item.label}
-                    onClick={() => scrollToSection(item.href)}
-                    className="block w-full text-left px-4 py-2 text-foreground/80 hover:text-primary hover:bg-muted rounded-lg transition-colors duration-200"
+                    onClick={() => handleNavigation(item.href)}
+                    className={`block w-full text-left px-4 py-2 rounded-lg transition-colors duration-200 ${
+                      isActiveRoute(item.href)
+                        ? "text-primary bg-muted"
+                        : "text-foreground/80 hover:text-primary hover:bg-muted"
+                    }`}
                   >
                     {item.label}
                   </button>
