@@ -72,7 +72,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         return;
       }
 
-      // Fallback: release loading state if we get an unexpected response
       setIsProcessing(false);
     } catch (error) {
       console.error("Google sign-in failed:", error);
