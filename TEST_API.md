@@ -1,3 +1,5 @@
+<<<<<<< Current (Your changes)
+=======
 # 🧪 Testing Your AI Car Recommendation API
 
 ## ✅ What I Fixed
@@ -185,3 +187,4 @@ If you still get errors, please share:
 3. Whether you added the GEMINI_API_KEY to `.env.local`
 
 The system will work even without the Gemini API key (using fallback patterns), but it won't be as smart at understanding complex queries.
+>>>>>>> Incoming (Background Agent changes)
