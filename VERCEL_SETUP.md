@@ -39,6 +39,8 @@ Go to **Settings** → **Environment Variables** and add these for **Production*
 MONGODB_URI=mongodb+srv://iamritkumar30_db_user:K33mdccAhbk5WSGJ@cluster0.b4jojkj.mongodb.net/autoassist_prod
 NEXTAUTH_URL=https://yourdomain.com
 NEXTAUTH_SECRET=your-production-nextauth-secret-key-here
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
 JWT_SECRET=generate-new-production-jwt-secret-here
 JWT_REFRESH_SECRET=generate-new-production-jwt-refresh-secret-here
 NODE_ENV=production
@@ -54,6 +56,8 @@ Add these for **Preview** (dev branch and PRs):
 MONGODB_URI=mongodb+srv://iamritkumar30_db_user:K33mdccAhbk5WSGJ@cluster0.b4jojkj.mongodb.net/autoassist_dev
 NEXTAUTH_URL=https://dev.yourdomain.com
 NEXTAUTH_SECRET=your-nextauth-secret-key-here
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
 JWT_SECRET=d2f67ea2b6e7cf627d2ef988b746219e50252c1544d0a40414c5898b8d9584ea5cc9d1b91bf2e45a29801c026a4f5fe9ef02b4b94b8e1cfb1d43107b14e6d3af
 JWT_REFRESH_SECRET=6fdf99a2d42dcc5a52184f5bd49bcc864a90a2b6a882d40d72a479a47c642ec50c78a7aa511909e4daee511da5c2099922ba7ebd3857ea0e214f528394527e32
 NODE_ENV=development

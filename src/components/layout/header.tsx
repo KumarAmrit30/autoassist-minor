@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, User, Menu, X } from "lucide-react";
+import { Search, User, LogOut, Menu, X } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 
 interface HeaderProps {
   onSignInClick: () => void;
@@ -11,6 +12,8 @@ interface HeaderProps {
 export default function Header({ onSignInClick }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -94,22 +97,47 @@ export default function Header({ onSignInClick }: HeaderProps) {
             </div>
           </div>
 
-          {/* Sign In Button */}
+          {/* Auth Controls */}
           <div className="flex items-center space-x-4">
-            <motion.button
-              onClick={onSignInClick}
-              className="hidden sm:flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <User className="w-4 h-4" />
-              <span>Sign In</span>
-            </motion.button>
+            {!isAuthenticated ? (
+              <motion.button
+                onClick={onSignInClick}
+                className="hidden sm:flex items-center space-x-2 rounded-full bg-gradient-to-r from-primary to-accent px-4 py-2 font-medium text-white transition-all duration-200 hover:shadow-lg hover:shadow-primary/30"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <User className="w-4 h-4" />
+                <span>Sign In</span>
+              </motion.button>
+            ) : (
+              <div className="hidden items-center space-x-3 sm:flex">
+                <div className="flex items-center space-x-2 rounded-full border border-border bg-muted/50 px-3 py-1.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-sm font-semibold text-primary">
+                    {session?.user?.name?.charAt(0)?.toUpperCase() ?? "A"}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-muted-foreground">Signed in as</p>
+                    <p className="text-sm font-medium">
+                      {session?.user?.name ?? session?.user?.email}
+                    </p>
+                  </div>
+                </div>
+                <motion.button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="flex items-center space-x-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:border-red-500/50 hover:text-red-500"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </motion.button>
+              </div>
+            )}
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-foreground hover:text-primary transition-colors duration-200"
+              className="p-2 text-foreground transition-colors duration-200 hover:text-primary lg:hidden"
             >
               {isMobileMenuOpen ? (
                 <X className="w-6 h-6" />
@@ -153,17 +181,30 @@ export default function Header({ onSignInClick }: HeaderProps) {
               ))}
             </nav>
 
-            {/* Mobile Sign In */}
-            <button
-              onClick={() => {
-                onSignInClick();
-                setIsMobileMenuOpen(false);
-              }}
-              className="flex items-center space-x-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors duration-200 sm:hidden"
-            >
-              <User className="w-4 h-4" />
-              <span>Sign In</span>
-            </button>
+            {/* Mobile Auth Controls */}
+            {!isAuthenticated ? (
+              <button
+                onClick={() => {
+                  onSignInClick();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex w-full items-center space-x-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary/90 sm:hidden"
+              >
+                <User className="w-4 h-4" />
+                <span>Sign In</span>
+              </button>
+            ) : (
+              <button
+                onClick={async () => {
+                  await signOut({ callbackUrl: "/" });
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex w-full items-center space-x-2 rounded-lg border border-border px-4 py-2 text-left font-medium text-muted-foreground transition-colors duration-200 hover:border-red-500/50 hover:text-red-500 sm:hidden"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
+            )}
           </div>
         </motion.div>
       </div>

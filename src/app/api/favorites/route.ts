@@ -1,30 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase, COLLECTIONS } from "@/lib/mongodb";
-import { verifyToken } from "@/lib/auth/jwt";
 import { ObjectId } from "mongodb";
+import { auth } from "@/auth";
 
 // GET /api/favorites - Get user's favorites
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const token = request.cookies.get("accessToken")?.value;
-
-    if (!token) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-    }
-
     const db = await getDatabase();
     const user = await db
       .collection(COLLECTIONS.USERS)
       .findOne(
-        { _id: new ObjectId(payload.userId) },
+        { _id: new ObjectId(session.user.id) },
         { projection: { favorites: 1 } }
       );
 
@@ -55,18 +49,12 @@ export async function GET(request: NextRequest) {
 // POST /api/favorites - Add car to favorites
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get("accessToken")?.value;
-
-    if (!token) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
-    }
-
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     const { carId } = await request.json();
@@ -90,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     // Add to favorites (MongoDB will handle duplicates)
     const result = await db.collection(COLLECTIONS.USERS).updateOne(
-      { _id: new ObjectId(payload.userId) },
+      { _id: new ObjectId(session.user.id) },
       {
         $addToSet: { favorites: carId },
         $set: { updatedAt: new Date() },
@@ -118,18 +106,12 @@ export async function POST(request: NextRequest) {
 // DELETE /api/favorites - Remove car from favorites
 export async function DELETE(request: NextRequest) {
   try {
-    const token = request.cookies.get("accessToken")?.value;
-
-    if (!token) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
-    }
-
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -146,7 +128,7 @@ export async function DELETE(request: NextRequest) {
 
     // Remove from favorites
     const result = await db.collection(COLLECTIONS.USERS).updateOne(
-      { _id: new ObjectId(payload.userId) },
+      { _id: new ObjectId(session.user.id) },
       {
         $pull: { favorites: carId },
         $set: { updatedAt: new Date() },

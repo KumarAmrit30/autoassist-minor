@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
 import LoadingScreen from "@/components/ui/loading-screen";
 import AuthModal from "@/components/ui/auth-modal";
 import Header from "@/components/layout/header";
@@ -18,6 +19,7 @@ export default function Home() {
   const [cars, setCars] = useState<Car[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isLoadingCars, setIsLoadingCars] = useState(false);
+  const { status } = useSession();
 
   useEffect(() => {
     // Check if user has visited before in this session
@@ -26,6 +28,12 @@ export default function Home() {
       setIsLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      setShowAuthModal(false);
+    }
+  }, [status]);
 
   // Fetch cars from API
   useEffect(() => {
