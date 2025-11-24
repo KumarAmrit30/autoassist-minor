@@ -199,7 +199,7 @@ export default function Header({ onSignInClick }: HeaderProps) {
                 </div>
               ) : (
                 <motion.button
-                  onClick={onSignInClick}
+                  // onClick={onSignInClick}
                   className="hidden sm:flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors duration-200"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

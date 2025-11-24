@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key-change-in-production";
@@ -20,72 +20,25 @@ export function verifyToken(token: string): JWTPayload | null {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     return decoded;
-  } catch (error) {
+  } catch (error) { 
     console.error("JWT verification failed:", error);
-=======
-// Modern JWT utilities with refresh token support
+    return null;
+  }
+} 
 
-import { SignJWT, jwtVerify } from "jose";
-import { JWTPayload } from "@/types/user";
 
-// Environment variables with defaults for development
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  "your-super-secret-jwt-key-change-this-in-production";
-const JWT_REFRESH_SECRET =
-  process.env.JWT_REFRESH_SECRET ||
-  "your-super-secret-refresh-key-change-this-in-production";
-
-// Convert string secrets to Uint8Array for jose library
-const jwtSecret = new TextEncoder().encode(JWT_SECRET);
-const refreshSecret = new TextEncoder().encode(JWT_REFRESH_SECRET);
-
-// Token expiration times
-const ACCESS_TOKEN_EXPIRY = "15m"; // 15 minutes
-const REFRESH_TOKEN_EXPIRY = "7d"; // 7 days
 
 /**
- * Generate an access token with short expiry
+
+/**
+ * Generate a refresh token with long expiry
  */
 export async function generateAccessToken(payload: {
   userId: string;
   email: string;
   role: string;
 }): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
-
-  return await new SignJWT({
-    ...payload,
-    type: "access",
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt(now)
-    .setExpirationTime(now + 15 * 60) // 15 minutes
-    .setIssuer("autoassist")
-    .setAudience("autoassist-users")
-    .sign(jwtSecret);
-}
-
-/**
- * Generate a refresh token with long expiry
- */
-export async function generateRefreshToken(payload: {
-  userId: string;
-  email: string;
-  role: string;
-}): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
-
-  return await new SignJWT({
-    ...payload,
-    type: "refresh",
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt(now)
-    .setExpirationTime(now + 7 * 24 * 60 * 60) // 7 days
-    .setIssuer("autoassist")
-    .setAudience("autoassist-users")
-    .sign(refreshSecret);
+  return jwt.sign(payload as Record<string, unknown>, JWT_SECRET, { expiresIn: "15m" });
 }
 
 /**
@@ -95,25 +48,15 @@ export async function verifyAccessToken(
   token: string
 ): Promise<JWTPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, jwtSecret, {
-      issuer: "autoassist",
-      audience: "autoassist-users",
-    });
-
-    if (payload.type !== "access") {
-      throw new Error("Invalid token type");
-    }
-
-    return payload as unknown as JWTPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    return decoded;
   } catch (error) {
     console.error("Access token verification failed:", error);
->>>>>>> 8de438e17829d9e6c12778b44c5807da90b7fd67
     return null;
   }
 }
 
-/**
-<<<<<<< HEAD
+/** 
  * Generate JWT access token
  * @param payload - Token payload data
  * @param expiresIn - Token expiration time (default: 15m)
@@ -123,7 +66,7 @@ export function generateToken(
   payload: Omit<JWTPayload, "iat" | "exp">,
   expiresIn: string = "15m"
 ): string {
-  return jwt.sign(payload as Record<string, unknown>, JWT_SECRET, { expiresIn });
+  return jwt.sign(payload as Record<string, unknown>, JWT_SECRET, { expiresIn: "15m" });
 }
 
 /**
@@ -135,32 +78,14 @@ export function verifyRefreshToken(token: string): JWTPayload | null {
   try {
     const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as JWTPayload;
     return decoded;
-=======
- * Verify a refresh token
- */
-export async function verifyRefreshToken(
-  token: string
-): Promise<JWTPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, refreshSecret, {
-      issuer: "autoassist",
-      audience: "autoassist-users",
-    });
-
-    if (payload.type !== "refresh") {
-      throw new Error("Invalid token type");
-    }
-
-    return payload as unknown as JWTPayload;
->>>>>>> 8de438e17829d9e6c12778b44c5807da90b7fd67
   } catch (error) {
     console.error("Refresh token verification failed:", error);
     return null;
   }
 }
 
+
 /**
-<<<<<<< HEAD
  * Generate refresh token
  * @param payload - Token payload data
  * @param expiresIn - Token expiration time (default: 7d)
@@ -170,12 +95,10 @@ export function generateRefreshToken(
   payload: Omit<JWTPayload, "iat" | "exp">,
   expiresIn: string = "7d"
 ): string {
-  return jwt.sign(payload as Record<string, unknown>, JWT_REFRESH_SECRET, { expiresIn });
+  return jwt.sign(payload as Record<string, unknown>, JWT_REFRESH_SECRET, { expiresIn: "7d" });
 }
 
-=======
- * Generate both access and refresh tokens
- */
+
 export async function generateTokenPair(payload: {
   userId: string;
   email: string;
@@ -207,14 +130,14 @@ export function extractTokenFromHeader(
  */
 export function isTokenExpired(payload: JWTPayload): boolean {
   const now = Math.floor(Date.now() / 1000);
-  return payload.exp <= now;
+    return (payload.exp ?? 0) <= now;
 }
 
 /**
  * Get token expiration time in milliseconds
  */
 export function getTokenExpirationTime(payload: JWTPayload): Date {
-  return new Date(payload.exp * 1000);
+  return new Date((payload.exp ?? 0) * 1000);
 }
 
 /**
@@ -232,4 +155,3 @@ export function generateSecureToken(): string {
 
   return result;
 }
->>>>>>> 8de438e17829d9e6c12778b44c5807da90b7fd67
