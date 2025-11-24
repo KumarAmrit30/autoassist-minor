@@ -9,12 +9,13 @@
     "lint": "eslint",
     "deploy:dev": "./deploy.sh dev",
     "deploy:prod": "./deploy.sh prod",
-    "deploy:help": "./deploy.sh help",
-    "setup:env": "./setup-env.sh",
-    "generate:secrets": "node generate-secrets.js"
+    "deploy:help": "./deploy.sh help"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "framer-motion": "^12.23.16",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.544.0",
     "mongodb": "^6.20.0",
     "next": "15.5.3",

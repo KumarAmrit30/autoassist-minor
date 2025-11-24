@@ -3,16 +3,13 @@ import { getDatabase, COLLECTIONS } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { Car } from "@/types/car";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // GET /api/cars/[id] - Get individual car details
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid car ID" }, { status: 400 });
