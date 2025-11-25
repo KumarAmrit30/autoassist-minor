@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 interface HeroSectionProps {
-  onSearch: (query: string) => void;
+  onSearch: (query: string, useRag?: boolean) => void;
   onFilterClick: () => void;
 }
 
@@ -23,15 +23,17 @@ export default function HeroSection({
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  const handleSearch = () => {
+  const handleSearch = (useRag: boolean = false) => {
     if (searchQuery.trim()) {
-      onSearch(searchQuery);
+      onSearch(searchQuery, useRag);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSearch();
+      // Use RAG by default (Ctrl/Cmd + Enter for regular search)
+      const useRag = !e.metaKey && !e.ctrlKey;
+      handleSearch(useRag);
     }
   };
 
@@ -141,15 +143,30 @@ export default function HeroSection({
                     className="p-3 text-muted-foreground hover:text-primary transition-colors duration-200"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    title="Browse with filters"
                   >
                     <Filter className="w-5 h-5" />
                   </motion.button>
 
+                  {/* RAG AI Search Button */}
                   <motion.button
-                    onClick={handleSearch}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-medium transition-colors duration-200"
+                    onClick={() => handleSearch(true)}
+                    className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    title="AI-powered recommendations"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    <span className="hidden sm:inline">AI Search</span>
+                  </motion.button>
+
+                  {/* Regular Search Button */}
+                  <motion.button
+                    onClick={() => handleSearch(false)}
+                    className="bg-muted hover:bg-muted/80 text-foreground px-6 py-3 rounded-xl font-medium transition-colors duration-200"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Standard search"
                   >
                     <Search className="w-5 h-5" />
                   </motion.button>

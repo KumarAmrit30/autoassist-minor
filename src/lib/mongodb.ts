@@ -40,7 +40,7 @@ export async function getDatabase(): Promise<Db> {
 
 // Database collections
 export const COLLECTIONS = {
-  CARS: "cars",
+  CARS: "cars_new", // Updated to use cars_new collection
   USERS: "users",
   SESSIONS: "sessions",
   FAVORITES: "favorites",

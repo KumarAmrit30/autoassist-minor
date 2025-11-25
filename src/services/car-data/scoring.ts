@@ -46,8 +46,43 @@ export class CarScoringService {
       };
     });
 
-    // Sort by score descending
-    return scored.sort((a, b) => b.score - a.score);
+    // Sort by score descending and ensure brand diversity
+    const sorted = scored.sort((a, b) => b.score - a.score);
+    
+    // Add brand diversity: ensure top 10 has variety of brands
+    return this.ensureBrandDiversity(sorted);
+  }
+
+  /**
+   * Ensure brand diversity in recommendations
+   * Mix brands in top results while maintaining score order
+   */
+  private ensureBrandDiversity(
+    recommendations: CarRecommendation[]
+  ): CarRecommendation[] {
+    if (recommendations.length <= 3) return recommendations;
+
+    const result: CarRecommendation[] = [];
+    const brandCount: Record<string, number> = {};
+    const remaining: CarRecommendation[] = [];
+
+    // First pass: Take top cars but limit 2 per brand in top 10
+    for (const car of recommendations) {
+      if (result.length < 10) {
+        const count = brandCount[car.brand] || 0;
+        if (count < 2) {
+          result.push(car);
+          brandCount[car.brand] = count + 1;
+        } else {
+          remaining.push(car);
+        }
+      } else {
+        remaining.push(car);
+      }
+    }
+
+    // Add remaining cars
+    return [...result, ...remaining];
   }
 
   /**
