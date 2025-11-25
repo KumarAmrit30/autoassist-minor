@@ -11,16 +11,21 @@ export function mapDatabaseCarToAppCar(dbCar: any): Car {
   return {
     _id: dbCar._id?.toString(),
 
-    // Identification
-    brand: dbCar.Identification_Brand || dbCar.brand || "",
-    model: dbCar.Identification_Model || dbCar.model || "",
-    variant: dbCar.Identification_Variant || dbCar.variant || "",
-    year: dbCar.Identification_Year_of_Manufacture || dbCar.year || 2024,
-    bodyType: dbCar.Identification_Body_Type || dbCar.bodyType || "",
-    segment: dbCar.Identification_Segment || dbCar.segment || "",
+    // Identification - Handle both space and underscore field names
+    brand: dbCar["Identification Brand"] || dbCar.Identification_Brand || dbCar.brand || "",
+    model: dbCar["Identification Model"] || dbCar.Identification_Model || dbCar.model || "",
+    variant: dbCar["Identification Variant"] || dbCar.Identification_Variant || dbCar.variant || "",
+    year: dbCar["Identification Year"] || dbCar.Identification_Year_of_Manufacture || dbCar.year || 2024,
+    bodyType: dbCar["Identification Body Type"] || dbCar.Identification_Body_Type || dbCar.bodyType || "",
+    segment: dbCar["Identification Segment"] || dbCar.Identification_Segment || dbCar.segment || "",
 
-    // Pricing
-    priceInLakhs: dbCar.Price_Lakhs || dbCar.priceInLakhs || 0,
+    // Pricing - Convert from actual price to lakhs
+    priceInLakhs: 
+      (dbCar["Pricing Delhi Ex Showroom Price"] ? dbCar["Pricing Delhi Ex Showroom Price"] / 100000 : 0) ||
+      (dbCar["Pricing Delhi On Road Price"] ? dbCar["Pricing Delhi On Road Price"] / 100000 : 0) ||
+      dbCar.Price_Lakhs || 
+      dbCar.priceInLakhs || 
+      0,
 
     // Dimensions
     length: dbCar.Dimensions_Length_mm || dbCar.length || 0,
@@ -34,19 +39,26 @@ export function mapDatabaseCarToAppCar(dbCar: any): Car {
       dbCar.Dimensions_Turning_Radius_m || dbCar.turningRadius || 0,
     fuelTank: dbCar.Dimensions_Fuel_Tank_Capacity_litres || dbCar.fuelTank || 0,
 
-    // Engine
+    // Engine - Handle space-separated field names
     displacement:
-      dbCar.Engine_Engine_Displacement_cc || dbCar.displacement || 0,
-    cylinders: dbCar.Engine_Cylinder_Count || dbCar.cylinders || 0,
+      dbCar["Engine Cc"] ||
+      dbCar.Engine_Engine_Displacement_cc || 
+      dbCar.displacement || 
+      0,
+    cylinders: dbCar["Engine Cylinders"] || dbCar.Engine_Cylinder_Count || dbCar.cylinders || 0,
     turboNA: mapTurboNA(
-      dbCar.Engine_Turbocharged_or_Naturally_Aspirated || dbCar.turboNA
+      dbCar["Engine Type"] ||
+      dbCar.Engine_Turbocharged_or_Naturally_Aspirated || 
+      dbCar.turboNA
     ),
-    powerBhp: dbCar.Engine_Power_bhp || dbCar.powerBhp || 0,
-    torqueNm: dbCar.Engine_Torque_Nm || dbCar.torqueNm || 0,
+    powerBhp: dbCar["Engine Bhp"] || dbCar.Engine_Power_bhp || dbCar.powerBhp || 0,
+    torqueNm: dbCar["Engine Torque"] || dbCar.Engine_Torque_Nm || dbCar.torqueNm || 0,
 
-    // Transmission
+    // Transmission - Handle space-separated field names
     transmissionType: mapTransmissionType(
-      dbCar.Transmission_Transmission_Type || dbCar.transmissionType
+      dbCar["Engine Transmission"] ||
+      dbCar.Transmission_Transmission_Type || 
+      dbCar.transmissionType
     ),
     gearCount: parseGearCount(dbCar.Transmission_Gear_Count || dbCar.gearCount),
     driveType: mapDriveType(dbCar.Transmission_Drive_Type || dbCar.driveType),
@@ -58,9 +70,12 @@ export function mapDatabaseCarToAppCar(dbCar: any): Car {
       0,
     topSpeed: dbCar.Performance_Top_Speed_km_h || dbCar.topSpeed || 0,
 
-    // Fuel & Emissions
+    // Fuel & Emissions - Handle space-separated field names
     mileageARAI:
-      dbCar.Fuel_and_Emissions_Mileage_ARAI_kmpl || dbCar.mileageARAI || 0,
+      dbCar["Efficiency Mileage Arai"] ||
+      dbCar.Fuel_and_Emissions_Mileage_ARAI_kmpl || 
+      dbCar.mileageARAI || 
+      0,
     emissionStandard:
       dbCar.Fuel_and_Emissions_Emission_Standard ||
       dbCar.emissionStandard ||

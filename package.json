@@ -9,7 +9,10 @@
     "lint": "eslint",
     "deploy:dev": "./deploy.sh dev",
     "deploy:prod": "./deploy.sh prod",
-    "deploy:help": "./deploy.sh help"
+    "deploy:help": "./deploy.sh help",
+    "rag:start": "./start-rag-backend.sh",
+    "rag:health": "curl http://localhost:8000/health",
+    "rag:test": "curl -X POST http://localhost:8000/chat -H 'Content-Type: application/json' -d '{\"query\": \"affordable family car\", \"session_id\": \"test\"}'"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
