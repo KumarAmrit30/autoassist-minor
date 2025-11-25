@@ -45,7 +45,8 @@ export default function AIChatInterface({
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [hasProcessedInitialQuery, setHasProcessedInitialQuery] = useState(false);
+  const [hasProcessedInitialQuery, setHasProcessedInitialQuery] =
+    useState(false);
 
   // Load chats from localStorage on mount
   useEffect(() => {
@@ -96,8 +97,8 @@ export default function AIChatInterface({
   const createNewChat = (firstMessage?: string) => {
     const newChat: Chat = {
       id: `chat_${Date.now()}`,
-      title: firstMessage 
-        ? (firstMessage.slice(0, 30) + (firstMessage.length > 30 ? "..." : ""))
+      title: firstMessage
+        ? firstMessage.slice(0, 30) + (firstMessage.length > 30 ? "..." : "")
         : "New Chat",
       messages: [],
       createdAt: new Date(),
@@ -157,8 +158,8 @@ export default function AIChatInterface({
     setIsLoading(true);
 
     try {
-      // Call AI API
-      const response = await fetch("/api/ai/chat", {
+      // Call RAG API (with Groq + vector search)
+      const response = await fetch("/api/ai/rag-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: text }),
@@ -258,7 +259,7 @@ export default function AIChatInterface({
                         : "hover:bg-muted"
                     }`}
                   >
-                    <div 
+                    <div
                       onClick={() => setCurrentChatId(chat.id)}
                       className="flex items-start space-x-2 flex-1 min-w-0"
                     >
@@ -311,7 +312,7 @@ export default function AIChatInterface({
                   <div>
                     <h2 className="text-lg font-bold">AI Car Assistant</h2>
                     <p className="text-xs text-muted-foreground">
-                      Powered by Gemini AI
+                      Powered by RAG + Groq AI ⚡
                     </p>
                   </div>
                 </div>
@@ -421,7 +422,11 @@ function ChatMessage({ message }: { message: Message }) {
       animate={{ opacity: 1, y: 0 }}
       className={`flex ${isUser ? "justify-end" : "justify-start"}`}
     >
-      <div className={`flex space-x-3 max-w-3xl ${isUser ? "flex-row-reverse space-x-reverse" : ""}`}>
+      <div
+        className={`flex space-x-3 max-w-3xl ${
+          isUser ? "flex-row-reverse space-x-reverse" : ""
+        }`}
+      >
         {/* Avatar */}
         <div
           className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
@@ -517,4 +522,3 @@ function LoadingMessage() {
     </div>
   );
 }
-
