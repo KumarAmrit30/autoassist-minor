@@ -1,77 +1,236 @@
 # AutoAssist - AI-Powered Car Recommendation Platform
 
-This is a [Next.js](https://nextjs.org) project with integrated RAG (Retrieval-Augmented Generation) for intelligent car recommendations.
+This is a [Next.js](https://nextjs.org) project with integrated cloud-based RAG (Retrieval-Augmented Generation) for intelligent car recommendations.
 
 ## 🌟 Features
 
-- **AI-Powered Search**: Semantic search using RAG system with LangChain and Qdrant
-- **Dual Search Modes**: Choose between intelligent AI search or traditional filtering
-- **Beautiful UI**: Modern, responsive design with smooth animations
-- **Smart Recommendations**: Context-aware car suggestions with explanations
-- **Real-time Results**: Fast, accurate recommendations powered by vector search
+- **🤖 Intelligent AI Search**: LLM-powered query understanding with automatic filter extraction
+- **⚡ Fast Responses**: Powered by Groq's ultra-fast inference (1-2 second responses)
+- **🔍 Smart Filtering**: Automatically understands constraints like "under 15 lakhs", "fuel efficient"
+- **☁️ Cloud-Native**: Fully cloud-based (MongoDB Atlas, Qdrant Cloud, Groq API)
+- **🎯 Context-Aware**: RAG system with 200+ cars and semantic search
+- **💎 Beautiful UI**: Modern, responsive design with smooth animations
+- **📊 Real-time Results**: Fast, accurate recommendations with metadata filtering
 
 ## 🚀 Quick Start
 
-### Standard Setup (Frontend Only)
+### ⚡ Super Quick (For Those Who Already Have Setup)
+
+If you already have MongoDB, Qdrant, and Groq configured:
 
 ```bash
-# Install dependencies
-npm install
+# Terminal 1: Start backend
+./start-rag-backend.sh
 
-# Run the development server
+# Terminal 2: Start frontend
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit **http://localhost:3000** 🎉
 
-### Full Setup (Frontend + RAG Backend)
+---
 
-**5-Minute Quick Start**: See [QUICKSTART_RAG.md](./QUICKSTART_RAG.md)
+### 📋 Full Setup (First Time - 5 Minutes)
 
-**Step-by-step**:
+#### Prerequisites
 
-1. **Start Qdrant** (Terminal 1):
-   ```bash
-   docker run -p 6333:6333 qdrant/qdrant
-   ```
+1. **MongoDB Atlas** (Free tier) - [Sign up here](https://www.mongodb.com/cloud/atlas/register)
+2. **Qdrant Cloud** (Free tier) - [Sign up here](https://cloud.qdrant.io/)
+3. **Groq API Key** (Free) - [Get API key here](https://console.groq.com/keys)
 
-2. **Start RAG Backend** (Terminal 2):
-   ```bash
-   npm run rag:start
-   ```
+#### Setup Steps
 
-3. **Start Next.js** (Terminal 3):
-   ```bash
-   npm run dev
-   ```
+**1. Clone and Install Dependencies**
 
-4. **Visit** http://localhost:3000 and try the AI Search!
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd autoassist-minor
 
-## 📚 Documentation
+# Install Node.js dependencies
+npm install
 
-- **[QUICKSTART_RAG.md](./QUICKSTART_RAG.md)** - Get the RAG system running in 5 minutes
-- **[RAG_INTEGRATION.md](./RAG_INTEGRATION.md)** - Complete integration guide
-- **[RAG_SUMMARY.md](./RAG_SUMMARY.md)** - Architecture and features overview
-- **[TEST_RAG.md](./TEST_RAG.md)** - Comprehensive testing guide
+# Setup Python environment for RAG backend
+cd llm
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cd ..
+```
+
+**2. Configure Environment Variables**
+
+Create `.env.local` in project root:
+
+```env
+# MongoDB (Required)
+MONGODB_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/
+MONGODB_DATABASE=autoassist
+MONGODB_COLLECTION=cars_new
+
+# Next.js
+RAG_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+Create `.env` in `llm/`:
+
+```env
+# MongoDB
+MONGODB_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/
+MONGODB_DATABASE=autoassist
+MONGODB_COLLECTION=cars_new
+
+# Qdrant Cloud (Required)
+QDRANT_URL=https://your-cluster.cloud.qdrant.io:6333
+QDRANT_API_KEY=your-qdrant-api-key
+QDRANT_COLLECTION_NAME=cars_rag
+
+# LLM - Groq (Recommended - Fastest)
+GROQ_API_KEY=your-groq-api-key
+GROQ_MODEL=llama-3.1-70b-versatile
+
+# Embedding Model
+EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+EMBEDDING_DIMENSION=384
+
+# Retrieval Settings
+RETRIEVAL_K=5
+USE_MONGODB=true
+```
+
+**3. Load Data and Create Embeddings**
+
+```bash
+cd llm
+source venv/bin/activate
+
+# Check environment setup
+python check_env.py
+
+# Load cars from MongoDB and create embeddings
+python -m backend.rag.embed --mongodb --recreate
+
+# Verify embeddings
+python -c "
+from qdrant_client import QdrantClient
+import os
+from dotenv import load_dotenv
+load_dotenv()
+client = QdrantClient(url=os.getenv('QDRANT_URL'), api_key=os.getenv('QDRANT_API_KEY'))
+print(f'✅ Total cars embedded: {client.count(\"cars_rag\").count}')
+"
+
+cd ..
+```
+
+**4. Start the Application**
+
+Open **3 terminals**:
+
+**Terminal 1 - FastAPI Backend:**
+
+```bash
+# Option 1: Using the convenience script
+./start-rag-backend.sh
+
+# Option 2: Manual start
+cd llm
+source venv/bin/activate
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Terminal 2 - Next.js Frontend:**
+
+```bash
+npm run dev
+```
+
+**Terminal 3 - Test the RAG System:**
+
+```bash
+# Test health
+curl http://localhost:8000/health
+
+# Test RAG query
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "fuel efficient sedan under 15 lakhs"}'
+```
+
+**5. Visit** http://localhost:3000 and try:
+
+- "fuel efficient sedan under 15 lakhs"
+- "SUV for family with good safety features"
+- "electric car with good range"
+- "luxury sedan above 50 lakhs"
+
+## 🎯 How It Works
+
+### Intelligent Query Understanding
+
+The RAG system uses **2-stage processing**:
+
+1. **Filter Extraction** (LLM-powered):
+
+   - "under 15 lakhs" → `price_max: 15.0`
+   - "fuel efficient" → `mileage_min: 18.0`
+   - "sedan" → `body_type: Sedan`
+   - "family car" → `seating_capacity: 7`
+
+2. **Semantic Search** (Vector similarity):
+
+   - Query embedding → Find similar cars
+   - Apply extracted filters
+   - Rank by relevance
+
+3. **Response Generation** (Groq LLM):
+   - Context-aware recommendations
+   - Specific model names, prices, features
+   - Comparison of trade-offs
+
+### Architecture
+
+```
+User Query
+    ↓
+[LLM Filter Extraction] → {price_max: 15, body_type: "Sedan", mileage_min: 18}
+    ↓
+[Semantic Search] → Find similar cars in Qdrant (200+ cars with metadata)
+    ↓
+[Metadata Filtering] → Apply extracted filters
+    ↓
+[Groq LLM] → Generate natural language response
+    ↓
+User sees: Recommended cars with details
+```
 
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **Next.js 15** - React framework
+
+- **Next.js 15** - React framework with App Router
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Styling
-- **Framer Motion** - Animations
-- **Lucide React** - Icons
+- **Framer Motion** - Smooth animations
+- **Lucide React** - Beautiful icons
 
-### AI/RAG System
-- **FastAPI** - Python backend
-- **LangChain** - RAG framework
-- **Qdrant** - Vector database
-- **Ollama/Llama** - LLM
-- **SentenceTransformers** - Embeddings
+### AI/RAG System (Cloud-Native)
 
-### Database
-- **MongoDB** - Primary database
+- **FastAPI** - Python backend (async)
+- **LangChain** - RAG orchestration
+- **Qdrant Cloud** - Vector database (free tier)
+- **Groq API** - Ultra-fast LLM inference (⚡ 1-2s responses)
+- **SentenceTransformers** - Text embeddings (all-MiniLM-L6-v2)
+- **MongoDB Atlas** - Car data storage
+
+### Key Features
+
+- ✅ **Intelligent Query Parsing** - LLM extracts filters from natural language
+- ✅ **Metadata Filtering** - 10+ filter types (price, mileage, body type, etc.)
+- ✅ **Semantic Search** - 384-dimensional embeddings
+- ✅ **Real-time Inference** - Groq provides sub-2-second responses
+- ✅ **Cloud-Ready** - No local infrastructure needed
 
 ## 📝 Available Scripts
 
@@ -82,182 +241,329 @@ npm run build           # Build for production
 npm run start           # Start production server
 npm run lint            # Run linter
 
-# RAG System
-npm run rag:start       # Start RAG backend
-npm run rag:health      # Check RAG backend health
-npm run rag:test        # Test RAG endpoint
+# Testing
+npm test                # Run tests
 
 # Deployment
 npm run deploy:dev      # Deploy to development
 npm run deploy:prod     # Deploy to production
 ```
 
-## 🎯 Usage
-
-### AI Search (RAG-Powered)
-1. Go to the home page
-2. Enter your query (e.g., "fuel-efficient sedan under 15 lakhs")
-3. Click the **"AI Search"** button (gradient with sparkle icon)
-4. View intelligent recommendations in a beautiful modal
-
-### Regular Search
-1. Enter your query
-2. Click the **standard search button** or press `Ctrl+Enter`
-3. Browse results on the explore page
-
 ## 🏗️ Project Structure
 
 ```
 autoassist-minor/
 ├── src/
-│   ├── app/                      # Next.js pages
-│   │   ├── (marketing)/          # Marketing pages (home, about, etc.)
-│   │   └── api/                  # API routes
-│   │       └── ai/
-│   │           └── rag-chat/     # RAG proxy endpoint
-│   ├── components/               # React components
-│   │   ├── features/             # Feature components
+│   ├── app/                                    # Next.js App Router
+│   │   ├── (marketing)/                       # Marketing pages
+│   │   │   ├── home/page.tsx
+│   │   │   ├── explore/page.tsx
+│   │   │   ├── features/page.tsx
+│   │   │   ├── about/page.tsx
+│   │   │   └── contact/page.tsx
+│   │   └── api/
+│   │       ├── ai/
+│   │       │   ├── rag-chat/route.ts          # RAG proxy endpoint
+│   │       │   ├── chat/route.ts              # Gemini chat
+│   │       │   └── search/route.ts            # AI search
+│   │       └── cars/route.ts                  # Car API
+│   ├── components/
+│   │   ├── features/
+│   │   │   ├── ai-chat-interface.tsx          # AI Chat UI
 │   │   │   ├── hero-section.tsx
 │   │   │   └── rag-recommendation-panel.tsx
-│   │   └── ui/                   # UI components
-│   ├── services/                 # Service layer
-│   │   └── ai/                   # AI services
-│   │       ├── client.ts         # Gemini client
-│   │       └── rag-client.ts     # RAG client
-│   └── lib/                      # Utilities
-├── llm/                          # RAG system
-│   └── RAG-System-for-Car-Recommendation-Chatbot/
-│       └── backend/              # FastAPI backend
-├── public/                       # Static assets
-└── docs/                         # Documentation
-    ├── QUICKSTART_RAG.md
-    ├── RAG_INTEGRATION.md
-    ├── RAG_SUMMARY.md
-    └── TEST_RAG.md
+│   │   ├── layout/                             # Header, Footer
+│   │   └── ui/                                 # Reusable UI components
+│   ├── services/
+│   │   ├── ai/
+│   │   │   ├── rag-client.ts                   # RAG API client
+│   │   │   └── client.ts                       # Gemini client
+│   │   └── car-data/                           # Car filtering & scoring
+│   ├── contexts/                               # React contexts
+│   └── types/
+│       ├── car.ts
+│       └── user.ts
+│
+├── llm/                                        # RAG Backend
+│   ├── backend/
+│   │   ├── main.py                             # FastAPI app
+│   │   ├── rag/
+│   │   │   ├── chain.py                        # RAG chain orchestration
+│   │   │   ├── retriever.py                    # Qdrant retriever
+│   │   │   ├── model.py                        # LLM loader (Groq)
+│   │   │   ├── embed.py                        # Embedding pipeline
+│   │   │   ├── mongodb_loader.py               # MongoDB data loader
+│   │   │   └── query_parser.py                 # LLM query parser
+│   │   ├── prompts/
+│   │   │   └── base_prompt.txt                 # System prompt
+│   │   ├── data/processed/                     # Processed car data
+│   │   └── tests/                              # Backend tests
+│   ├── venv/                                   # Python virtual environment
+│   ├── requirements.txt                        # Python dependencies
+│   ├── .env                                    # Backend environment config
+│   ├── check_env.py                            # Environment checker
+│   └── test_rag_system.py                      # RAG system tests
+│
+├── public/                                     # Static assets
+├── start-rag-backend.sh                        # Convenience script to start backend
+└── README.md                                   # This file
 ```
 
 ## 🔧 Configuration
 
-### Environment Variables
+### Supported Filter Types
 
-Create `.env.local` in the project root:
+The system automatically extracts these filters from natural language:
 
-```env
-# AI Configuration
-GEMINI_API_KEY=your_gemini_api_key
+| Filter Type  | Example Query             | Extracted Filter                 |
+| ------------ | ------------------------- | -------------------------------- |
+| Price        | "under 15 lakhs"          | `price_max: 15.0`                |
+| Price Range  | "between 10 and 20 lakhs" | `price_min: 10, price_max: 20`   |
+| Body Type    | "SUV"                     | `body_type: "SUV"`               |
+| Fuel Type    | "electric car"            | `fuel_type: "Electric"`          |
+| Mileage      | "fuel efficient"          | `mileage_min: 18.0`              |
+| Seating      | "7 seater"                | `seating_capacity: 7`            |
+| Transmission | "automatic"               | `transmission_type: "Automatic"` |
+| Segment      | "luxury sedan"            | `segment: "Luxury"`              |
 
-# RAG Backend
-RAG_API_URL=http://localhost:8000
+### Environment Variables Explained
 
-# MongoDB
-MONGODB_URI=your_mongodb_uri
+**MongoDB:**
 
-# NextAuth (if using)
-NEXTAUTH_SECRET=your_secret
-NEXTAUTH_URL=http://localhost:3000
-```
+- `MONGODB_URI` - Connection string from MongoDB Atlas
+- `MONGODB_DATABASE` - Database name (default: `autoassist`)
+- `MONGODB_COLLECTION` - Collection name (default: `cars_new`)
 
-For RAG backend configuration, see [RAG_INTEGRATION.md](./RAG_INTEGRATION.md#configuration).
+**Qdrant Cloud:**
+
+- `QDRANT_URL` - Your cluster URL (format: `https://xxx.cloud.qdrant.io:6333`)
+- `QDRANT_API_KEY` - API key from Qdrant dashboard
+- `QDRANT_COLLECTION_NAME` - Collection name (default: `cars_rag`)
+
+**Groq LLM:**
+
+- `GROQ_API_KEY` - Free API key from console.groq.com
+- `GROQ_MODEL` - Model name (options below)
+
+**Groq Models (Fastest to Use):**
+
+- `llama-3.1-70b-versatile` - Best for complex queries (recommended)
+- `llama-3.1-8b-instant` - Fastest responses
+- `mixtral-8x7b-32768` - Large context window
+- `gemma2-9b-it` - Efficient alternative
 
 ## 🧪 Testing
 
+### Test RAG System
+
 ```bash
-# Test RAG integration
-npm run rag:test
+# 1. Check environment
+cd llm
+source venv/bin/activate
+python check_env.py
 
-# Test frontend
-npm run dev
-# Then visit http://localhost:3000
+# 2. Test FastAPI backend
+curl http://localhost:8000/health
 
-# Check health
-npm run rag:health
+# 3. Test query parsing and filtering
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "fuel efficient sedan under 15 lakhs with good safety"
+  }' | python3 -m json.tool
+
+# 4. Test via Next.js proxy
+curl -X POST http://localhost:3000/api/ai/rag-chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "SUV under 20 lakhs"}' | python3 -m json.tool
 ```
 
-For comprehensive testing guide, see [TEST_RAG.md](./TEST_RAG.md).
+### Example Queries to Test
+
+```bash
+# Price filtering
+"cars under 10 lakhs"
+"luxury sedan above 50 lakhs"
+"between 15 and 25 lakhs"
+
+# Feature-based
+"fuel efficient sedan"
+"electric car with good range"
+"7 seater SUV"
+
+# Combined constraints
+"fuel efficient sedan under 15 lakhs with automatic transmission"
+"electric SUV for family under 30 lakhs"
+"luxury car with ADAS features"
+```
 
 ## 🐛 Troubleshooting
 
-### RAG Backend Not Working
-```bash
-# Check if backend is running
-npm run rag:health
-
-# Restart backend
-npm run rag:start
-```
-
-### Qdrant Connection Issues
-```bash
-# Start Qdrant
-docker run -p 6333:6333 qdrant/qdrant
-
-# Verify it's running
-curl http://localhost:6333
-```
-
-For more troubleshooting, see [RAG_INTEGRATION.md](./RAG_INTEGRATION.md#troubleshooting).
-
-## 📦 Installation
+### Backend Not Starting
 
 ```bash
-# Clone the repository
-git clone <your-repo-url>
-cd autoassist-minor
-
-# Install dependencies
-npm install
-
-# Setup RAG backend (one-time)
-cd llm/RAG-System-for-Car-Recommendation-Chatbot
-python3 -m venv venv
+# Check Python environment
+cd llm
 source venv/bin/activate
+python check_env.py
+
+# Reinstall dependencies
 pip install -r requirements.txt
 
-# Ingest data (one-time)
-python backend/rag/loader.py
-python backend/rag/embed.py --recreate
+# Check if port 8000 is available
+lsof -i :8000  # macOS/Linux
+netstat -ano | findstr :8000  # Windows
+```
 
-# Return to project root
-cd ../..
+### No Results / Empty Recommendations
+
+```bash
+# Check if embeddings exist
+python -c "
+from qdrant_client import QdrantClient
+import os
+from dotenv import load_dotenv
+load_dotenv()
+client = QdrantClient(url=os.getenv('QDRANT_URL'), api_key=os.getenv('QDRANT_API_KEY'))
+print(f'Cars in Qdrant: {client.count(\"cars_rag\").count}')
+"
+
+# Re-embed if needed
+python -m backend.rag.embed --mongodb --recreate
+```
+
+### MongoDB Connection Issues
+
+```bash
+# Test MongoDB connection
+python -c "
+from pymongo import MongoClient
+import os
+from dotenv import load_dotenv
+load_dotenv()
+client = MongoClient(os.getenv('MONGODB_URI'))
+client.admin.command('ping')
+print('✅ MongoDB connected!')
+"
+
+# Check SSL certificates (macOS)
+/Applications/Python\ 3.12/Install\ Certificates.command
+```
+
+### Qdrant Timeout Errors
+
+```bash
+# Use smaller batch size for embedding
+python -m backend.rag.embed --mongodb --recreate
+# (Already configured with batch_size=20 and delays)
+
+# Or embed subset for testing
+python -c "
+from backend.rag.mongodb_loader import load_cars_from_mongodb
+from backend.rag.embed import embed_and_upsert, get_qdrant_client
+from sentence_transformers import SentenceTransformer
+
+cars = load_cars_from_mongodb(limit=200)  # First 200 cars
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+client = get_qdrant_client()
+embed_and_upsert(cars, model, client, 'cars_rag', batch_size=20)
+"
 ```
 
 ## 🚢 Deployment
 
-See [VERCEL_SETUP.md](./VERCEL_SETUP.md) for Vercel deployment.
+### Vercel (Frontend)
 
-For production deployment of the RAG backend, consider:
-- Docker containerization
-- Managed Qdrant cloud
-- Gunicorn for FastAPI
-- Environment-specific configurations
+```bash
+# Install Vercel CLI
+npm i -g vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Deploy
+vercel --prod
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Set environment variables in Vercel dashboard
+# - MONGODB_URI
+# - RAG_API_URL (your FastAPI deployment URL)
+# - NEXT_PUBLIC_API_URL
+```
+
+### FastAPI Backend Options
+
+**Option 1: Render.com (Recommended - Free tier)**
+
+```bash
+# 1. Push to GitHub
+# 2. Connect Render to your repo
+# 3. Configure:
+#    - Root Directory: llm
+#    - Build Command: pip install -r requirements.txt
+#    - Start Command: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+# 4. Add environment variables from .env
+```
+
+**Option 2: Railway.app**
+
+```bash
+# Similar to Render, but auto-detects Python
+railway up
+```
+
+**Option 3: Docker**
+
+```dockerfile
+# Create Dockerfile in llm/
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+```bash
+# Build and run
+cd llm
+docker build -t autoassist-rag .
+docker run -p 8000:8000 --env-file .env autoassist-rag
+```
+
+## 📊 Performance
+
+- **Query Response Time**: 1-2 seconds (Groq)
+- **Embedding Dimension**: 384 (MiniLM)
+- **Cars Embedded**: 200+ (expandable to 742)
+- **Filters Supported**: 10+ types
+- **Concurrent Users**: Unlimited (cloud-native)
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
+
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
 See [LICENSE](./LICENSE) file for details.
 
-## 🔗 Learn More
+## 🔗 Resources
 
-### Next.js Resources
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial
-- [Next.js GitHub repository](https://github.com/vercel/next.js)
+### Documentation
 
-### RAG/AI Resources
-- [LangChain Documentation](https://python.langchain.com/)
-- [Qdrant Documentation](https://qdrant.tech/documentation/)
-- [Ollama Documentation](https://github.com/ollama/ollama)
+- [Next.js Docs](https://nextjs.org/docs)
+- [LangChain Docs](https://python.langchain.com/)
+- [Qdrant Docs](https://qdrant.tech/documentation/)
+- [Groq Docs](https://console.groq.com/docs)
+- [MongoDB Atlas](https://www.mongodb.com/docs/atlas/)
+
+### API Keys (Free Tiers)
+
+- [Groq API](https://console.groq.com/keys) - Fast LLM inference
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) - Database
+- [Qdrant Cloud](https://cloud.qdrant.io/) - Vector database
 
 ## ⭐ Show Your Support
 
@@ -265,4 +571,6 @@ If you find this project helpful, please give it a star!
 
 ---
 
-**Built with ❤️ using Next.js and RAG**
+**Built with ❤️ using Next.js, FastAPI, and RAG**
+
+**Cloud Stack**: MongoDB Atlas • Qdrant Cloud • Groq • Vercel
