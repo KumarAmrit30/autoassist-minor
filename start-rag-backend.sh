@@ -7,14 +7,14 @@ echo "🚀 Starting RAG Backend Server..."
 echo ""
 
 # Check if we're in the correct directory
-if [ ! -d "llm/RAG-System-for-Car-Recommendation-Chatbot" ]; then
-    echo "❌ Error: llm/RAG-System-for-Car-Recommendation-Chatbot directory not found"
+if [ ! -d "llm" ]; then
+    echo "❌ Error: llm directory not found"
     echo "   Please run this script from the project root"
     exit 1
 fi
 
 # Navigate to the LLM directory
-cd llm/RAG-System-for-Car-Recommendation-Chatbot
+cd llm
 
 # Check if Python is installed
 if ! command -v python3 &> /dev/null; then
