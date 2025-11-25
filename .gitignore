@@ -39,3 +39,60 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# python
+venv/
+env/
+.venv/
+virtualenv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+
+# RAG system data (don't commit large data files)
+llm/RAG-System-for-Car-Recommendation-Chatbot/backend/data/
+llm/RAG-System-for-Car-Recommendation-Chatbot/backend/rag/__pycache__/
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!next.config.json
+
+# Large zip files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
