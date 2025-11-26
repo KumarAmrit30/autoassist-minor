@@ -27,6 +27,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Car } from "@/types/car";
+import { useComparison } from "@/contexts/comparison-context";
 import CarCard from "@/components/features/car-card";
 
 type TabType = "overview" | "performance" | "safety" | "comfort" | "technology";
@@ -35,6 +36,7 @@ export default function CarDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const carId = params.id as string;
+  const { addToComparison, isInComparison, canAddMore } = useComparison();
 
   const [car, setCar] = useState<Car | null>(null);
   const [relatedCars, setRelatedCars] = useState<Car[]>([]);
@@ -43,6 +45,23 @@ export default function CarDetailsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [isFavorite, setIsFavorite] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
+
+  const handleCompare = () => {
+    if (!car) return;
+    
+    if (isInComparison(car._id!)) {
+      // If already in comparison, navigate to comparison page
+      router.push("/compare");
+    } else if (canAddMore) {
+      // Add to comparison
+      addToComparison(car);
+      // Optionally navigate to comparison page after adding
+      // router.push("/compare");
+    } else {
+      // Max limit reached, navigate to comparison page
+      router.push("/compare");
+    }
+  };
 
   useEffect(() => {
     const fetchCarDetails = async () => {
@@ -360,13 +379,17 @@ export default function CarDetailsPage() {
               </motion.button>
 
               <motion.button
-                onClick={() => console.log("Compare clicked")}
-                className="flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
+                onClick={handleCompare}
+                className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all cursor-pointer ${
+                  isInComparison(car._id!)
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-border hover:bg-muted"
+                }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <GitCompare className="w-5 h-5" />
-                <span>Compare</span>
+                <span>{isInComparison(car._id!) ? "In Comparison" : "Compare"}</span>
               </motion.button>
 
               <motion.button
@@ -441,7 +464,6 @@ export default function CarDetailsPage() {
                   key={relatedCar._id}
                   car={relatedCar}
                   onViewDetails={(id) => router.push(`/cars/${id}`)}
-                  onCompare={(id) => console.log("Compare:", id)}
                   onToggleFavorite={(id) => console.log("Favorite:", id)}
                   onToggleWishlist={(id) => console.log("Wishlist:", id)}
                 />

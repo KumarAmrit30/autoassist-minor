@@ -12,8 +12,10 @@ import {
   Settings,
   Heart,
   Bookmark,
+  GitCompare,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { useComparison } from "@/contexts/comparison-context";
 import LogoutConfirmationModal from "@/components/ui/logout-confirmation-modal";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -23,12 +25,19 @@ interface HeaderProps {
 
 export default function Header({ onSignInClick }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
+  const { comparisonCars } = useComparison();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  const handleCompareClick = () => {
+    if (comparisonCars.length > 0) {
+      router.push("/compare");
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -143,6 +152,27 @@ export default function Header({ onSignInClick }: HeaderProps) {
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Comparison Button */}
+              <motion.button
+                onClick={handleCompareClick}
+                disabled={comparisonCars.length === 0}
+                className="relative p-2 text-foreground hover:text-primary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="View Comparison"
+              >
+                <GitCompare className="w-5 h-5" />
+                {comparisonCars.length > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center"
+                  >
+                    {comparisonCars.length}
+                  </motion.span>
+                )}
+              </motion.button>
+
               {isAuthenticated ? (
                 <div className="relative hidden sm:block user-menu-container">
                   <motion.button
@@ -266,6 +296,21 @@ export default function Header({ onSignInClick }: HeaderProps) {
                   </button>
                 ))}
               </nav>
+
+              {/* Mobile Comparison Button */}
+              <button
+                onClick={handleCompareClick}
+                disabled={comparisonCars.length === 0}
+                className="lg:hidden flex items-center space-x-2 w-full px-4 py-2 text-sm hover:bg-muted rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <GitCompare className="w-4 h-4" />
+                <span>Compare Cars</span>
+                {comparisonCars.length > 0 && (
+                  <span className="ml-auto px-2 py-0.5 bg-primary text-primary-foreground text-xs font-bold rounded-full">
+                    {comparisonCars.length}
+                  </span>
+                )}
+              </button>
 
               {isAuthenticated ? (
                 <div className="sm:hidden space-y-2">
