@@ -149,7 +149,7 @@ export default function CarCard({
         <div className="absolute top-3 right-3 z-10 flex space-x-2">
           <motion.button
             onClick={() => onToggleFavorite(car._id!)}
-            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${
+            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 cursor-pointer ${
               car.isFavorite
                 ? "bg-red-500 text-white"
                 : "bg-black/20 text-white hover:bg-red-500"
@@ -164,7 +164,7 @@ export default function CarCard({
 
           <motion.button
             onClick={() => onToggleWishlist(car._id!)}
-            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${
+            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 cursor-pointer ${
               car.isInWishlist
                 ? "bg-primary text-white"
                 : "bg-black/20 text-white hover:bg-primary"
@@ -276,7 +276,7 @@ export default function CarCard({
             {hasMoreFeatures && (
               <motion.button
                 onClick={() => setShowMoreFeatures(!showMoreFeatures)}
-                className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium hover:bg-primary/20 transition-colors flex items-center gap-1"
+                className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium hover:bg-primary/20 transition-colors flex items-center gap-1 cursor-pointer"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -306,7 +306,7 @@ export default function CarCard({
                 console.error("Car ID is missing:", car);
               }
             }}
-            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center space-x-1"
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center space-x-1 cursor-pointer"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -316,7 +316,7 @@ export default function CarCard({
 
           <motion.button
             onClick={() => onCompare(car._id!)}
-            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center"
+            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center cursor-pointer"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >

@@ -68,16 +68,115 @@ export async function POST(request: NextRequest) {
     const data: RagChatResponse = await response.json();
 
     console.log(`[RAG] Received ${data.recommended.length} recommendations`);
+    console.log(`[RAG] Sample recommendation:`, JSON.stringify(data.recommended[0], null, 2));
 
-    // Return the response from FastAPI
+    // Fetch full car data using existing API for recommendations
+    // This ensures consistent data formatting and proper field mapping
+    const baseUrl = request.headers.get('origin') || 
+                   process.env.NEXT_PUBLIC_BASE_URL || 
+                   `http://localhost:${process.env.PORT || 3000}`;
+    
+    const enrichedRecommendations = await Promise.all(
+      data.recommended.map(async (rec: any, index: number) => {
+        try {
+          console.log(`[RAG] Processing recommendation ${index}:`, {
+            keys: Object.keys(rec),
+            id: rec.id,
+            name: rec.name,
+            make: rec.make,
+            model: rec.model,
+            price: rec.price,
+            mileage: rec.mileage,
+          });
+
+          // RAG now returns: { id: "MongoDB _id", make: "Brand", model: "Model", name: "Brand Model", price: X, mileage: Y }
+          const carId = rec.id;
+          const make = rec.make || "";
+          const model = rec.model || "";
+          
+          // First try: Use MongoDB ID directly if available
+          if (carId && carId !== "Unknown" && carId !== "") {
+            try {
+              console.log(`[RAG] Fetching car by ID: ${carId}`);
+              const carResponse = await fetch(
+                `${baseUrl}/api/cars/${carId}`,
+                { 
+                  cache: 'no-store',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  }
+                }
+              );
+              
+              if (carResponse.ok) {
+                const carData = await carResponse.json();
+                if (carData.car) {
+                  console.log(`[RAG] Fetched car: ${carData.car.brand} ${carData.car.model}`);
+                  return carData.car; // Return the properly formatted car
+                }
+              }
+              console.warn(`[RAG] Failed to fetch car by ID: ${carId}`);
+            } catch (error) {
+              console.warn(`[RAG] Error fetching car ${carId}:`, error);
+            }
+          }
+          
+          // Second try: Search by brand/model
+          if (make && model && make !== "Unknown" && model !== "Unknown") {
+            try {
+              const searchQuery = `${make} ${model}`.trim();
+              console.log(`[RAG] Searching for: "${searchQuery}"`);
+              
+              const searchResponse = await fetch(
+                `${baseUrl}/api/cars?search=${encodeURIComponent(searchQuery)}&limit=1`,
+                { 
+                  cache: 'no-store',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  }
+                }
+              );
+              
+              if (searchResponse.ok) {
+                const searchData = await searchResponse.json();
+                if (searchData.cars && searchData.cars.length > 0) {
+                  console.log(`[RAG] Found car: ${searchData.cars[0].brand} ${searchData.cars[0].model}`);
+                  return searchData.cars[0]; // Return the first matching car
+                } else {
+                  console.warn(`[RAG] No cars found for: ${searchQuery}`);
+                }
+              }
+            } catch (error) {
+              console.warn(`[RAG] Failed to search for car ${make} ${model}:`, error);
+            }
+          }
+          
+          console.warn(`[RAG] Could not enrich recommendation:`, rec);
+          // If we can't fetch from API, return null so frontend can filter it out
+          return null;
+        } catch (error) {
+          console.warn(`[RAG] Error enriching recommendation ${index}:`, error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out null values (failed enrichments)
+    const validRecommendations = enrichedRecommendations.filter(r => r !== null);
+    
+    console.log(`[RAG] Enrichment complete. ${validRecommendations.length}/${data.recommended.length} recommendations enriched successfully`);
+
+    // Return the response with enriched recommendations
     return NextResponse.json({
       response: data.answer,
-      recommendations: data.recommended,
+      recommendations: validRecommendations,
       sources: data.sources,
       metadata: {
         sessionId,
         timestamp: new Date().toISOString(),
         backend: "rag",
+        originalCount: data.recommended.length,
+        enrichedCount: validRecommendations.length,
       },
     });
   } catch (error) {

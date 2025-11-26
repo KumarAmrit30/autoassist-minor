@@ -130,7 +130,7 @@ export default function CarDetailsPage() {
           <h1 className="text-2xl font-bold mb-4">Car not found</h1>
           <button
             onClick={() => router.push("/explore")}
-            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 cursor-pointer"
           >
             Back to Explore
           </button>
@@ -149,7 +149,7 @@ export default function CarDetailsPage() {
           <div className="flex items-center space-x-2 text-sm">
             <button
               onClick={() => router.push("/")}
-              className="text-muted-foreground hover:text-foreground transition-colors flex items-center"
+              className="text-muted-foreground hover:text-foreground transition-colors flex items-center cursor-pointer"
             >
               <Home className="w-4 h-4 mr-1" />
               Home
@@ -157,7 +157,7 @@ export default function CarDetailsPage() {
             <BreadcrumbArrow className="w-4 h-4 text-muted-foreground" />
             <button
               onClick={() => router.push("/explore")}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               Explore
             </button>
@@ -199,13 +199,13 @@ export default function CarDetailsPage() {
                 <>
                   <button
                     onClick={prevImage}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
                   <button
                     onClick={nextImage}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
@@ -225,7 +225,7 @@ export default function CarDetailsPage() {
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                       currentImageIndex === index
                         ? "border-primary"
                         : "border-transparent hover:border-muted-foreground"
@@ -329,7 +329,7 @@ export default function CarDetailsPage() {
             <div className="grid grid-cols-2 gap-3">
               <motion.button
                 onClick={() => setIsFavorite(!isFavorite)}
-                className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all ${
+                className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all cursor-pointer ${
                   isFavorite
                     ? "bg-red-500 text-white"
                     : "bg-card border border-border hover:bg-muted"
@@ -345,7 +345,7 @@ export default function CarDetailsPage() {
 
               <motion.button
                 onClick={() => setIsInWishlist(!isInWishlist)}
-                className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all ${
+                className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all cursor-pointer ${
                   isInWishlist
                     ? "bg-primary text-primary-foreground"
                     : "bg-card border border-border hover:bg-muted"
@@ -361,7 +361,7 @@ export default function CarDetailsPage() {
 
               <motion.button
                 onClick={() => console.log("Compare clicked")}
-                className="flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium bg-card border border-border hover:bg-muted transition-all"
+                className="flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -371,7 +371,7 @@ export default function CarDetailsPage() {
 
               <motion.button
                 onClick={handleShare}
-                className="flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium bg-card border border-border hover:bg-muted transition-all"
+                className="flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium bg-card border border-border hover:bg-muted transition-all cursor-pointer"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -398,7 +398,7 @@ export default function CarDetailsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`flex items-center space-x-2 px-6 py-4 font-medium whitespace-nowrap transition-all border-b-2 ${
+                  className={`flex items-center space-x-2 px-6 py-4 font-medium whitespace-nowrap transition-all border-b-2 cursor-pointer ${
                     activeTab === tab.id
                       ? "border-primary text-primary bg-primary/5"
                       : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
