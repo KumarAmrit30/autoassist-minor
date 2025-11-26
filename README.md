@@ -35,6 +35,8 @@ npm install
 
 ### 3. Setup Python Environment
 
+**Option A: With Virtual Environment (Recommended)**
+
 **macOS/Linux:**
 
 ```bash
@@ -54,6 +56,26 @@ venv\Scripts\activate
 pip install -r requirements.txt
 cd ..
 ```
+
+**Option B: Without Virtual Environment**
+
+**macOS/Linux:**
+
+```bash
+cd llm
+pip3 install -r requirements.txt
+cd ..
+```
+
+**Windows:**
+
+```bash
+cd llm
+pip install -r requirements.txt
+cd ..
+```
+
+> **Note:** Using a virtual environment is recommended to avoid conflicts with other Python projects. If you choose Option B, dependencies will be installed globally.
 
 ### 4. Configure Environment Variables
 
@@ -93,7 +115,7 @@ USE_MONGODB=true
 
 ### 5. Load Data and Create Embeddings
 
-**macOS/Linux:**
+**macOS/Linux (with venv):**
 
 ```bash
 cd llm
@@ -103,11 +125,29 @@ python -m backend.rag.embed --mongodb --recreate
 cd ..
 ```
 
-**Windows:**
+**macOS/Linux (without venv):**
+
+```bash
+cd llm
+python3 check_env.py
+python3 -m backend.rag.embed --mongodb --recreate
+cd ..
+```
+
+**Windows (with venv):**
 
 ```bash
 cd llm
 venv\Scripts\activate
+python check_env.py
+python -m backend.rag.embed --mongodb --recreate
+cd ..
+```
+
+**Windows (without venv):**
+
+```bash
+cd llm
 python check_env.py
 python -m backend.rag.embed --mongodb --recreate
 cd ..
@@ -119,17 +159,31 @@ Open **2 terminals**:
 
 ### Terminal 1: Start Backend
 
-**macOS/Linux:**
+**macOS/Linux (with venv):**
 
 ```bash
 ./start-rag-backend.sh
 ```
 
-**Windows:**
+**macOS/Linux (without venv):**
+
+```bash
+cd llm
+python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Windows (with venv):**
 
 ```bash
 cd llm
 venv\Scripts\activate
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Windows (without venv):**
+
+```bash
+cd llm
 python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
@@ -172,17 +226,32 @@ Try these queries in the application:
 
 ### Backend Won't Start
 
+**With venv:**
+
 ```bash
 cd llm
 source venv/bin/activate  # macOS/Linux
 # OR
 venv\Scripts\activate     # Windows
-
 python check_env.py
 pip install -r requirements.txt
 ```
 
+**Without venv:**
+
+```bash
+cd llm
+python3 check_env.py      # macOS/Linux
+# OR
+python check_env.py       # Windows
+pip3 install -r requirements.txt  # macOS/Linux
+# OR
+pip install -r requirements.txt   # Windows
+```
+
 ### No Recommendations Returned
+
+**With venv:**
 
 ```bash
 cd llm
@@ -195,6 +264,23 @@ python -c "from qdrant_client import QdrantClient; import os; from dotenv import
 
 # Re-create embeddings if needed
 python -m backend.rag.embed --mongodb --recreate
+```
+
+**Without venv:**
+
+```bash
+cd llm
+
+# Verify embeddings exist (macOS/Linux)
+python3 -c "from qdrant_client import QdrantClient; import os; from dotenv import load_dotenv; load_dotenv(); client = QdrantClient(url=os.getenv('QDRANT_URL'), api_key=os.getenv('QDRANT_API_KEY')); print(f'Cars in DB: {client.count(\"cars_rag\").count}')"
+
+# OR (Windows)
+python -c "from qdrant_client import QdrantClient; import os; from dotenv import load_dotenv; load_dotenv(); client = QdrantClient(url=os.getenv('QDRANT_URL'), api_key=os.getenv('QDRANT_API_KEY')); print(f'Cars in DB: {client.count(\"cars_rag\").count}')"
+
+# Re-create embeddings if needed
+python3 -m backend.rag.embed --mongodb --recreate  # macOS/Linux
+# OR
+python -m backend.rag.embed --mongodb --recreate   # Windows
 ```
 
 ### Port Already in Use
