@@ -12,19 +12,47 @@ export function mapDatabaseCarToAppCar(dbCar: any): Car {
     _id: dbCar._id?.toString(),
 
     // Identification - Handle both space and underscore field names
-    brand: dbCar["Identification Brand"] || dbCar.Identification_Brand || dbCar.brand || "",
-    model: dbCar["Identification Model"] || dbCar.Identification_Model || dbCar.model || "",
-    variant: dbCar["Identification Variant"] || dbCar.Identification_Variant || dbCar.variant || "",
-    year: dbCar["Identification Year"] || dbCar.Identification_Year_of_Manufacture || dbCar.year || 2024,
-    bodyType: dbCar["Identification Body Type"] || dbCar.Identification_Body_Type || dbCar.bodyType || "",
-    segment: dbCar["Identification Segment"] || dbCar.Identification_Segment || dbCar.segment || "",
+    brand:
+      dbCar["Identification Brand"] ||
+      dbCar.Identification_Brand ||
+      dbCar.brand ||
+      "",
+    model:
+      dbCar["Identification Model"] ||
+      dbCar.Identification_Model ||
+      dbCar.model ||
+      "",
+    variant:
+      dbCar["Identification Variant"] ||
+      dbCar.Identification_Variant ||
+      dbCar.variant ||
+      "",
+    year:
+      dbCar["Identification Year"] ||
+      dbCar.Identification_Year_of_Manufacture ||
+      dbCar.year ||
+      2024,
+    bodyType:
+      dbCar["Identification Body Type"] ||
+      dbCar.Identification_Body_Type ||
+      dbCar.bodyType ||
+      "",
+    segment:
+      dbCar["Identification Segment"] ||
+      dbCar.Identification_Segment ||
+      dbCar.segment ||
+      "",
 
     // Pricing - Convert from actual price to lakhs
-    priceInLakhs: 
-      (dbCar["Pricing Delhi Ex Showroom Price"] ? dbCar["Pricing Delhi Ex Showroom Price"] / 100000 : 0) ||
-      (dbCar["Pricing Delhi On Road Price"] ? dbCar["Pricing Delhi On Road Price"] / 100000 : 0) ||
-      dbCar.Price_Lakhs || 
-      dbCar.priceInLakhs || 
+    priceInLakhs:
+      (dbCar["Pricing Delhi Ex Showroom Price"]
+        ? dbCar["Pricing Delhi Ex Showroom Price"] / 100000
+        : 0) ||
+      (dbCar["Pricing Delhi On Road Price"]
+        ? dbCar["Pricing Delhi On Road Price"] / 100000
+        : 0) ||
+      dbCar.Price_Lakhs ||
+      dbCar.priceInLakhs ||
       0,
 
     // Dimensions
@@ -42,23 +70,29 @@ export function mapDatabaseCarToAppCar(dbCar: any): Car {
     // Engine - Handle space-separated field names
     displacement:
       dbCar["Engine Cc"] ||
-      dbCar.Engine_Engine_Displacement_cc || 
-      dbCar.displacement || 
+      dbCar.Engine_Engine_Displacement_cc ||
+      dbCar.displacement ||
       0,
-    cylinders: dbCar["Engine Cylinders"] || dbCar.Engine_Cylinder_Count || dbCar.cylinders || 0,
+    cylinders:
+      dbCar["Engine Cylinders"] ||
+      dbCar.Engine_Cylinder_Count ||
+      dbCar.cylinders ||
+      0,
     turboNA: mapTurboNA(
       dbCar["Engine Type"] ||
-      dbCar.Engine_Turbocharged_or_Naturally_Aspirated || 
-      dbCar.turboNA
+        dbCar.Engine_Turbocharged_or_Naturally_Aspirated ||
+        dbCar.turboNA
     ),
-    powerBhp: dbCar["Engine Bhp"] || dbCar.Engine_Power_bhp || dbCar.powerBhp || 0,
-    torqueNm: dbCar["Engine Torque"] || dbCar.Engine_Torque_Nm || dbCar.torqueNm || 0,
+    powerBhp:
+      dbCar["Engine Bhp"] || dbCar.Engine_Power_bhp || dbCar.powerBhp || 0,
+    torqueNm:
+      dbCar["Engine Torque"] || dbCar.Engine_Torque_Nm || dbCar.torqueNm || 0,
 
     // Transmission - Handle space-separated field names
     transmissionType: mapTransmissionType(
       dbCar["Engine Transmission"] ||
-      dbCar.Transmission_Transmission_Type || 
-      dbCar.transmissionType
+        dbCar.Transmission_Transmission_Type ||
+        dbCar.transmissionType
     ),
     gearCount: parseGearCount(dbCar.Transmission_Gear_Count || dbCar.gearCount),
     driveType: mapDriveType(dbCar.Transmission_Drive_Type || dbCar.driveType),
@@ -73,8 +107,8 @@ export function mapDatabaseCarToAppCar(dbCar: any): Car {
     // Fuel & Emissions - Handle space-separated field names
     mileageARAI:
       dbCar["Efficiency Mileage Arai"] ||
-      dbCar.Fuel_and_Emissions_Mileage_ARAI_kmpl || 
-      dbCar.mileageARAI || 
+      dbCar.Fuel_and_Emissions_Mileage_ARAI_kmpl ||
+      dbCar.mileageARAI ||
       0,
     emissionStandard:
       dbCar.Fuel_and_Emissions_Emission_Standard ||
