@@ -57,8 +57,7 @@ build/
 .coverage
 
 # RAG system data (don't commit large data files)
-llm/RAG-System-for-Car-Recommendation-Chatbot/backend/data/
-llm/RAG-System-for-Car-Recommendation-Chatbot/backend/rag/__pycache__/
+llm/backend/data/
 *.json
 !package.json
 !package-lock.json
