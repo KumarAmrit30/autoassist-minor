@@ -146,3 +146,44 @@ html {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+
+/* Cursor Pointers for Clickable Elements */
+button,
+a,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+select,
+[role="button"],
+[role="link"],
+[role="tab"],
+[role="menuitem"],
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Disabled elements */
+button:disabled,
+input:disabled,
+select:disabled,
+[disabled] {
+  cursor: not-allowed;
+}
+
+/* Text inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+textarea {
+  cursor: text;
+}
+
+/* Resize cursor for textareas */
+textarea {
+  cursor: text;
+  resize: vertical;
+}

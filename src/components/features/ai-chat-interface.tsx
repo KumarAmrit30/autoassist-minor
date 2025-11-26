@@ -13,6 +13,8 @@ import {
   MessageSquare,
   Trash2,
 } from "lucide-react";
+import CarCard from "@/components/features/car-card";
+import { Car } from "@/types/car";
 
 interface Message {
   id: string;
@@ -452,43 +454,176 @@ function ChatMessage({ message }: { message: Message }) {
             <p className="whitespace-pre-wrap break-words">{message.content}</p>
           </div>
 
-          {/* Recommendations */}
+          {/* Recommendations - Modern Cards */}
           {message.recommendations && message.recommendations.length > 0 && (
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {message.recommendations.map((car: any, idx: number) => (
-                <div
-                  key={idx}
-                  className="bg-card border border-border rounded-lg p-3 hover:border-primary/50 transition-colors"
-                >
-                  <h4 className="font-semibold text-sm mb-2 line-clamp-1">
-                    {car.name}
-                  </h4>
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <div className="flex justify-between">
-                      <span>Price:</span>
-                      <span className="font-medium text-foreground">
-                        ₹{car.price?.toFixed(2)}L
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Mileage:</span>
-                      <span className="font-medium text-foreground">
-                        {car.mileage?.toFixed(1)} km/l
-                      </span>
-                    </div>
-                    {car.score && (
-                      <div className="pt-2 border-t border-border">
-                        <div className="flex items-center justify-between">
-                          <span>Match:</span>
-                          <span className="font-medium text-primary">
-                            {Math.round(car.score)}%
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {message.recommendations.map((carData: any, idx: number) => {
+                // Extract car ID - try multiple possible fields
+                let carId = carData._id || carData.id || carData.ID;
+                if (carId && typeof carId === 'object' && carId.toString) {
+                  carId = carId.toString();
+                }
+                if (!carId || carId === 'car_0' || carId === 'car_1') {
+                  // Try to find ID in other fields or generate from name
+                  const name = carData.name || `${carData.brand || carData.make || ''} ${carData.model || ''}`.trim();
+                  if (name) {
+                    // Try to fetch car by name/brand/model to get real ID
+                    carId = null; // Will need to search for it
+                  }
+                }
+                
+                // Convert recommendation data to Car type
+                const car: Car = {
+                  _id: carId || `temp_${idx}`,
+                  brand: carData.brand || carData.make || carData.Make || "",
+                  model: carData.model || carData.Model || "",
+                  variant: carData.variant || carData.Variant || "",
+                  year: carData.year || carData.Year || 2024,
+                  bodyType: carData.bodyType || carData.BodyType || "",
+                  segment: carData.segment || carData.Segment || "",
+                  priceInLakhs: carData.price || carData.Price || carData.priceInLakhs || 0,
+                  
+                  // Dimensions
+                  length: carData.length || 4000,
+                  width: carData.width || 1700,
+                  height: carData.height || 1500,
+                  wheelbase: carData.wheelbase || 2500,
+                  groundClearance: carData.groundClearance || 165,
+                  weight: carData.weight || 1200,
+                  turningRadius: carData.turningRadius || 5,
+                  fuelTank: carData.fuelTank || 45,
+                  
+                  // Engine
+                  displacement: carData.displacement || 1000,
+                  cylinders: carData.cylinders || 3,
+                  turboNA: (carData.turboNA || "NA") as "Turbo" | "NA",
+                  powerBhp: carData.powerBhp || carData.power || 60,
+                  torqueNm: carData.torqueNm || 90,
+                  
+                  // Transmission
+                  transmissionType: (carData.transmission || carData.transmissionType || "Manual") as any,
+                  gearCount: carData.gearCount || 5,
+                  driveType: (carData.driveType || "FWD") as any,
+                  
+                  // Performance
+                  acceleration0to100: carData.acceleration0to100 || 12,
+                  topSpeed: carData.topSpeed || 180,
+                  
+                  // Fuel
+                  mileageARAI: carData.mileage || carData.Mileage || carData.mileageARAI || 15,
+                  emissionStandard: carData.emissionStandard || "BS6",
+                  adBlueSystem: carData.adBlueSystem || false,
+                  
+                  // Safety
+                  airbags: carData.airbags || 2,
+                  abs: carData.abs !== false,
+                  esc: carData.esc !== false,
+                  crashTestRating: carData.crashTestRating || carData.rating || 4,
+                  parkingSensors: carData.parkingSensors || false,
+                  parkingCamera: carData.parkingCamera || false,
+                  isofix: carData.isofix || false,
+                  hillHoldControl: carData.hillHoldControl || false,
+                  tractionControl: carData.tractionControl || false,
+                  electronicBrakeDistribution: carData.electronicBrakeDistribution !== false,
+                  
+                  // Comfort
+                  airConditioning: carData.airConditioning !== false,
+                  ventilatedSeats: carData.ventilatedSeats || false,
+                  keylessEntry: carData.keylessEntry || false,
+                  cruiseControl: carData.cruiseControl || false,
+                  sunroof: carData.sunroof || false,
+                  heatedSeats: carData.heatedSeats || false,
+                  lumbarSupport: carData.lumbarSupport || false,
+                  adjustableHeadrest: carData.adjustableHeadrest !== false,
+                  rearArmrest: carData.rearArmrest || false,
+                  cupHolders: carData.cupHolders || 2,
+                  powerWindows: carData.powerWindows !== false,
+                  centralLocking: carData.centralLocking !== false,
+                  
+                  // Infotainment
+                  touchscreenSize: carData.touchscreenSize || 7,
+                  carPlayAndroidAuto: carData.carPlayAndroidAuto || false,
+                  speakers: carData.speakers || 4,
+                  digitalCluster: carData.digitalCluster || false,
+                  connectedTech: carData.connectedTech || false,
+                  wirelessCharging: carData.wirelessCharging || false,
+                  usbPorts: carData.usbPorts || 2,
+                  bluetoothConnectivity: carData.bluetoothConnectivity !== false,
+                  
+                  // Practicality
+                  bootSpace: carData.bootSpace || 350,
+                  foldableSeats: carData.foldableSeats !== false,
+                  roofRails: carData.roofRails || false,
+                  spareWheel: (carData.spareWheel || "Full") as any,
+                  
+                  // Exterior
+                  wheelSize: carData.wheelSize || 15,
+                  ledHeadlights: carData.ledHeadlights || false,
+                  drl: carData.drl || false,
+                  fogLamps: carData.fogLamps || false,
+                  autoFoldingMirrors: carData.autoFoldingMirrors || false,
+                  alloyWheels: carData.alloyWheels || false,
+                  
+                  // ADAS
+                  adaptiveCruise: carData.adaptiveCruise || false,
+                  laneKeepAssist: carData.laneKeepAssist || false,
+                  collisionWarning: carData.collisionWarning || false,
+                  automaticEmergencyBraking: carData.automaticEmergencyBraking || false,
+                  blindSpotMonitor: carData.blindSpotMonitor || false,
+                  rearCrossTrafficAlert: carData.rearCrossTrafficAlert || false,
+                  driverAttentionAlert: carData.driverAttentionAlert || false,
+                  
+                  // Ownership
+                  warranty: carData.warranty || "3 Years/1,00,000 km",
+                  serviceInterval: carData.serviceInterval || 10000,
+                  roadsideAssistance: carData.roadsideAssistance !== false,
+                  
+                  // Additional
+                  images: carData.images || [],
+                  rating: carData.rating || carData.crashTestRating || 4,
+                  reviewCount: carData.reviewCount || 0,
+                };
+                
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <CarCard
+                      car={car}
+                      onViewDetails={async (id) => {
+                        // If ID is temporary, try to find the real car
+                        if (id.startsWith('temp_')) {
+                          // Search for car by name/brand/model
+                          const searchQuery = `${car.brand} ${car.model}`.trim();
+                          try {
+                            const response = await fetch(`/api/cars?search=${encodeURIComponent(searchQuery)}&limit=1`);
+                            if (response.ok) {
+                              const data = await response.json();
+                              if (data.cars && data.cars.length > 0) {
+                                window.location.href = `/cars/${data.cars[0]._id}`;
+                                return;
+                              }
+                            }
+                          } catch (error) {
+                            console.error("Error searching for car:", error);
+                          }
+                          // Fallback: show error or go to explore
+                          alert("Car details not available. Please search for this car on the explore page.");
+                          window.location.href = `/explore?search=${encodeURIComponent(searchQuery)}`;
+                        } else {
+                          window.location.href = `/cars/${id}`;
+                        }
+                      }}
+                      onCompare={(id) => console.log("Compare:", id)}
+                      onToggleFavorite={(id) => console.log("Favorite:", id)}
+                      onToggleWishlist={(id) => console.log("Wishlist:", id)}
+                    />
+                  </motion.div>
+                );
+              })}
             </div>
           )}
 

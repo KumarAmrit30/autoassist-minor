@@ -66,7 +66,7 @@ export default function ModernSearchBar({
       <div
         className={`relative flex items-center gap-2 bg-background/80 backdrop-blur-xl border-2 rounded-2xl transition-all duration-300 ${
           isFocused
-            ? "border-primary shadow-2xl shadow-primary/20 scale-[1.02]"
+            ? "border-primary/60 shadow-lg shadow-primary/10"
             : "border-border/50 hover:border-border"
         }`}
       >
