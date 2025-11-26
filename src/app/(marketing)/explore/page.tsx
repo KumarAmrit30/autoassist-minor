@@ -48,7 +48,7 @@ export default function ExplorePage() {
   };
 
   const handleViewDetails = (carId: string) => {
-    console.log("View details for car ID:", carId);
+    router.push(`/cars/${carId}`);
   };
 
   const handleCompare = (carId: string) => {
