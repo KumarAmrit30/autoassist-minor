@@ -14,13 +14,16 @@ import {
   GitCompare,
   ChevronDown,
   ChevronUp,
+  Check,
 } from "lucide-react";
 import { Car } from "@/types/car";
+import { useComparison } from "@/contexts/comparison-context";
+import { useRouter } from "next/navigation";
 
 interface CarCardProps {
   car: Car;
   onViewDetails: (carId: string) => void;
-  onCompare: (carId: string) => void;
+  onCompare?: (carId: string) => void;
   onToggleFavorite: (carId: string) => void;
   onToggleWishlist: (carId: string) => void;
 }
@@ -32,10 +35,34 @@ export default function CarCard({
   onToggleFavorite,
   onToggleWishlist,
 }: CarCardProps) {
+  const router = useRouter();
+  const { addToComparison, isInComparison, canAddMore } = useComparison();
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showMoreFeatures, setShowMoreFeatures] = useState(false);
+
+  const handleCompare = () => {
+    if (isInComparison(car._id!)) {
+      // If already in comparison, navigate to comparison page
+      router.push("/compare");
+    } else if (canAddMore) {
+      // Add to comparison
+      const added = addToComparison(car);
+      if (added) {
+        if (onCompare) {
+          onCompare(car._id!);
+        }
+        // Optionally navigate to comparison page after adding
+        // router.push("/compare");
+      }
+    } else {
+      // Max limit reached, navigate to comparison page
+      router.push("/compare");
+    }
+  };
+
+  const isCompared = isInComparison(car._id!);
 
   const getFuelTypeColor = (transmissionType: string) => {
     switch (transmissionType) {
@@ -315,12 +342,21 @@ export default function CarCard({
           </motion.button>
 
           <motion.button
-            onClick={() => onCompare(car._id!)}
-            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center cursor-pointer"
+            onClick={handleCompare}
+            className={`py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center cursor-pointer ${
+              isCompared
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
+            }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            title={isCompared ? "View Comparison" : "Add to Comparison"}
           >
-            <GitCompare className="w-3.5 h-3.5" />
+            {isCompared ? (
+              <Check className="w-3.5 h-3.5" />
+            ) : (
+              <GitCompare className="w-3.5 h-3.5" />
+            )}
           </motion.button>
         </div>
       </div>

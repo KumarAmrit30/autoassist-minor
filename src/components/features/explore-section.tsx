@@ -10,7 +10,7 @@ interface ExploreSectionProps {
   cars: Car[];
   isLoading?: boolean;
   onViewDetails: (carId: string) => void;
-  onCompare: (carId: string) => void;
+  onCompare?: (carId: string) => void;
   onToggleFavorite: (carId: string) => void;
   onToggleWishlist: (carId: string) => void;
 }

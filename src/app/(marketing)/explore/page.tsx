@@ -52,10 +52,6 @@ export default function ExplorePage() {
     router.push(`/cars/${carId}`);
   };
 
-  const handleCompare = (carId: string) => {
-    console.log("Compare car ID:", carId);
-  };
-
   const handleToggleFavorite = (carId: string) => {
     console.log("Toggle favorite for car ID:", carId);
   };
@@ -130,7 +126,6 @@ export default function ExplorePage() {
         cars={cars}
         isLoading={isLoadingCars}
         onViewDetails={handleViewDetails}
-        onCompare={handleCompare}
         onToggleFavorite={handleToggleFavorite}
         onToggleWishlist={handleToggleWishlist}
       />
