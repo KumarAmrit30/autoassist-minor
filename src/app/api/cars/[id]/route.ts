@@ -30,204 +30,227 @@ export async function GET(
     const transformedCar: Car = {
       _id: car._id.toString(),
 
-      // Identification
-      brand: car.Identification_Brand || car.brand || "Unknown",
-      model: car.Identification_Model || car.model || "Unknown",
-      variant: car.Identification_Variant || car.variant || "Unknown",
-      year: car.Identification_Year_of_Manufacture || car.year || 2024,
-      bodyType: car.Identification_Body_Type || car.bodyType || "Unknown",
-      segment: car.Identification_Segment || car.segment || "Unknown",
+      // Identification - MongoDB uses spaces in field names
+      brand: car["Identification Brand"] || car.Identification_Brand || car.brand || car.make || "Unknown",
+      model: car["Identification Model"] || car.Identification_Model || car.model || "Unknown",
+      variant: car["Identification Variant"] || car.Identification_Variant || car.variant || "Unknown",
+      year: car["Identification Year"] || car["Identification Year of Manufacture"] || car.Identification_Year_of_Manufacture || car.year || 2024,
+      bodyType: car["Identification Body Type"] || car.Identification_Body_Type || car.bodyType || car.body_type || "Unknown",
+      segment: car["Identification Segment"] || car.Identification_Segment || car.segment || "Unknown",
 
-      // Pricing
-      priceInLakhs: car.Price_Lakhs || car.priceInLakhs || 0,
+      // Pricing - Convert from rupees to lakhs
+      priceInLakhs: car["Pricing Delhi Ex Showroom Price"] 
+        ? parseFloat(car["Pricing Delhi Ex Showroom Price"]) / 100000 
+        : (car.Price_Lakhs || car.priceInLakhs || car.price_lakhs || 0),
 
       // Dimensions
-      length: car.Dimensions_Length_mm || car.length || 4000,
-      width: car.Dimensions_Width_mm || car.width || 1700,
-      height: car.Dimensions_Height_mm || car.height || 1500,
-      wheelbase: car.Dimensions_Wheelbase_mm || car.wheelbase || 2500,
+      length: car["Dimensions Length"] || car.Dimensions_Length_mm || car.length || 4000,
+      width: car["Dimensions Width"] || car.Dimensions_Width_mm || car.width || 1700,
+      height: car["Dimensions Height"] || car.Dimensions_Height_mm || car.height || 1500,
+      wheelbase: car["Dimensions Wheelbase"] || car.Dimensions_Wheelbase_mm || car.wheelbase || 2500,
       groundClearance:
-        car.Dimensions_Ground_Clearance_mm || car.groundClearance || 165,
-      weight: car.Dimensions_Kerb_Weight_kg || car.weight || 1200,
-      turningRadius: car.Dimensions_Turning_Radius_m || car.turningRadius || 5,
-      fuelTank: car.Dimensions_Fuel_Tank_Capacity_litres || car.fuelTank || 45,
+        car["Dimensions Ground Clearance"] || car.Dimensions_Ground_Clearance_mm || car.groundClearance || car.ground_clearance || 165,
+      weight: car["Dimensions Weight Kg"] || car.Dimensions_Kerb_Weight_kg || car.weight || 1200,
+      turningRadius: car["Dimensions Turning Radius"] || car.Dimensions_Turning_Radius_m || car.turningRadius || car.turning_radius || 5,
+      fuelTank: car["Efficiency Tank Capacity"] || car.Dimensions_Fuel_Tank_Capacity_litres || car.fuelTank || car.fuel_tank || 45,
 
       // Engine
       displacement:
-        car.Engine_Engine_Displacement_cc || car.displacement || 1000,
-      cylinders: car.Engine_Cylinder_Count || car.cylinders || 3,
-      turboNA: (car.Engine_Turbocharged_or_Naturally_Aspirated ===
-      "Turbocharged"
+        car["Engine Cc"] || car.Engine_Engine_Displacement_cc || car.displacement || 1000,
+      cylinders: car["Engine Cylinders"] || car.Engine_Cylinder_Count || car.cylinders || 3,
+      turboNA: (car["Engine Turbo"] === true || car.Engine_Turbocharged_or_Naturally_Aspirated === "Turbocharged"
         ? "Turbo"
         : "NA") as "Turbo" | "NA",
-      powerBhp: car.Engine_Power_bhp || car.powerBhp || 60,
-      torqueNm: car.Engine_Torque_Nm || car.torqueNm || 90,
+      powerBhp: car["Engine Bhp"] || car.Engine_Power_bhp || car.powerBhp || car.power_bhp || 60,
+      torqueNm: car["Engine Torque"] || car.Engine_Torque_Nm || car.torqueNm || car.torque_nm || 90,
 
       // Transmission
       transmissionType:
-        car.Transmission_Transmission_Type || car.transmissionType || "Manual",
+        car["Engine Transmission"] || car.Transmission_Transmission_Type || car.transmissionType || car.transmission_type || "Manual",
       gearCount: parseInt(
-        car.Transmission_Gear_Count?.toString().replace(/[^0-9]/g, "") || "5"
+        (car["Engine Gears"] || car.Transmission_Gear_Count || car.gearCount)?.toString().replace(/[^0-9]/g, "") || "5"
       ),
-      driveType: car.Transmission_Drive_Type || car.driveType || "FWD",
+      driveType: car["Engine Drive"] || car.Transmission_Drive_Type || car.driveType || car.drive_type || "FWD",
 
       // Performance
       acceleration0to100:
-        car.Performance_0_to_100_kmph_secs || car.acceleration0to100 || 12,
-      topSpeed: car.Performance_Top_Speed_kmph || car.topSpeed || 180,
+        car["Engine 0 100 Sec"] || car.Performance_0_to_100_kmph_secs ||
+        car.acceleration0to100 || car.acceleration_0_to_100 || 12,
+      topSpeed: car["Engine Top Speed"] || car.Performance_Top_Speed_kmph || car.topSpeed || car.top_speed || 180,
 
       // Fuel & Emissions
-      mileageARAI: car.Fuel_Mileage_ARAI_kmpl || car.mileageARAI || 15,
+      mileageARAI:
+        car["Efficiency Mileage Arai"] || car["Efficiency Mileage City"] || car["Efficiency Mileage Highway"] ||
+        car.Fuel_Mileage_ARAI_kmpl || car.mileageARAI || car.mileage || 15,
       emissionStandard:
-        car.Fuel_Emission_Standard || car.emissionStandard || "BS6",
+        car["Efficiency Emission Standard"] || car.Fuel_Emission_Standard ||
+        car.emissionStandard || car.emission_standard || "BS6",
       adBlueSystem:
-        car.Fuel_Ad_Blue_System === "Yes" || car.adBlueSystem || false,
+        car["Fuel Ad Blue System"] === "Yes" || car.Fuel_Ad_Blue_System === "Yes" ||
+        car.adBlueSystem || false,
 
       // Safety
       airbags: parseInt(
-        car.Safety_Airbags?.toString().replace(/[^0-9]/g, "") || "2"
+        (car["Safety Airbags"] || car.Safety_Airbags || car.airbags || 2)?.toString().replace(/[^0-9]/g, "") || "2"
       ),
-      abs: car.Safety_ABS === "Yes" || car.abs || true,
-      esc: car.Safety_ESC === "Yes" || car.esc || true,
+      abs: car["Safety Abs"] === true || car.Safety_ABS === "Yes" || car.abs !== false,
+      esc: car["Safety Esp"] === true || car.Safety_ESC === "Yes" || car.esc === true || false,
       crashTestRating: parseFloat(
-        car.Safety_Crash_Test_Rating || car.crashTestRating || "4"
+        (car["Safety Ncap Stars"] || car.Safety_Crash_Test_Rating || car.crashTestRating || car.crash_rating || 4)?.toString().replace(/[^0-9.]/g, "") || "4"
       ),
       parkingSensors:
-        car.Safety_Parking_Sensors === "Yes" || car.parkingSensors || false,
+        car["Safety Parking Sensors"] === true || car.Safety_Parking_Sensors === "Yes" ||
+        car.parkingSensors === true || false,
       parkingCamera:
-        car.Safety_Parking_Camera === "Yes" || car.parkingCamera || false,
-      isofix: car.Safety_ISOFIX === "Yes" || car.isofix || false,
+        car["Safety Parking Camera"] === true || car.Safety_Parking_Camera === "Yes" || 
+        car.parkingCamera === true || false,
+      isofix: car["Safety Isofix"] === true || car.Safety_ISOFIX === "Yes" || 
+        car.isofix === true || false,
       hillHoldControl:
-        car.Safety_Hill_Hold_Control === "Yes" || car.hillHoldControl || false,
+        car["Safety Hill Hold"] === true || car.Safety_Hill_Hold_Control === "Yes" || 
+        car.hillHoldControl === true || false,
       tractionControl:
-        car.Safety_Traction_Control === "Yes" || car.tractionControl || false,
+        car["Safety Traction Control"] === true || car.Safety_Traction_Control === "Yes" || 
+        car.tractionControl === true || false,
       electronicBrakeDistribution:
-        car.Safety_EBD === "Yes" || car.electronicBrakeDistribution || true,
+        car["Safety EBD"] === true || car.Safety_EBD === "Yes" ||
+        car.electronicBrakeDistribution !== false || true,
 
       // Comfort
-      airConditioning: car.Comfort_AC === "Yes" || car.airConditioning || true,
+      airConditioning:
+        car["Comfort AC"] !== "No" || car.Comfort_AC === "Yes" || 
+        car.airConditioning !== false || true,
       ventilatedSeats:
-        car.Comfort_Ventilated_Seats === "Yes" || car.ventilatedSeats || false,
+        car["Features Ventilated Seats"] === true || car.Comfort_Ventilated_Seats === "Yes" || 
+        car.ventilatedSeats === true || false,
       keylessEntry:
-        car.Comfort_Keyless_Entry === "Yes" || car.keylessEntry || false,
+        car["Features Keyless Entry"] === true || car.Comfort_Keyless_Entry === "Yes" ||
+        car.keylessEntry === true || false,
       cruiseControl:
-        car.Comfort_Cruise_Control === "Yes" || car.cruiseControl || false,
-      sunroof: car.Comfort_Sunroof === "Yes" || car.sunroof || false,
+        car["Features Cruise Control"] === true || car.Comfort_Cruise_Control === "Yes" || 
+        car.cruiseControl === true || false,
+      sunroof: car["Features Sunroof"] === true || car.Comfort_Sunroof === "Yes" || 
+        car.sunroof === true || false,
       heatedSeats:
-        car.Comfort_Heated_Seats === "Yes" || car.heatedSeats || false,
+        car["Comfort Heated Seats"] === true || car.Comfort_Heated_Seats === "Yes" || 
+        car.heatedSeats === true || false,
       lumbarSupport:
-        car.Comfort_Lumbar_Support === "Yes" || car.lumbarSupport || false,
+        car["Comfort Lumbar Support"] === true || car.Comfort_Lumbar_Support === "Yes" || 
+        car.lumbarSupport !== false,
       adjustableHeadrest:
-        car.Comfort_Adjustable_Headrest === "Yes" ||
-        car.adjustableHeadrest ||
-        true,
+        car["Comfort Adjustable Headrest"] === true || car.Comfort_Adjustable_Headrest === "Yes" ||
+        car.adjustableHeadrest !== false || true,
       rearArmrest:
-        car.Comfort_Rear_Armrest === "Yes" || car.rearArmrest || false,
+        car["Comfort Rear Armrest"] === true || car.Comfort_Rear_Armrest === "Yes" || 
+        car.rearArmrest !== false,
       cupHolders: parseInt(
-        car.Comfort_Cup_Holders?.toString().replace(/[^0-9]/g, "") || "2"
+        (car["Comfort Cup Holders"] || car.Comfort_Cup_Holders || car.cupHolders || 2)?.toString().replace(/[^0-9]/g, "") || "2"
       ),
       powerWindows:
-        car.Comfort_Power_Windows === "Yes" || car.powerWindows || true,
+        car["Comfort Power Windows"] === true || car.Comfort_Power_Windows === "Yes" || 
+        car.powerWindows !== false || true,
       centralLocking:
-        car.Comfort_Central_Locking === "Yes" || car.centralLocking || true,
+        car["Comfort Central Locking"] === true || car.Comfort_Central_Locking === "Yes" || 
+        car.centralLocking !== false || true,
 
       // Infotainment
       touchscreenSize: parseInt(
-        car.Infotainment_Touchscreen_Size?.toString().replace(/[^0-9]/g, "") ||
-          "7"
+        (car["Features Touchscreen Inch"] || car.Infotainment_Touchscreen_Size || 
+         car.touchscreenSize || car.touchscreen_size || 7)?.toString().replace(/[^0-9]/g, "") || "7"
       ),
       carPlayAndroidAuto:
-        car.Infotainment_Apple_CarPlay_Android_Auto === "Yes" ||
-        car.carPlayAndroidAuto ||
-        false,
+        car["Features Apple CarPlay"] === true || car.Infotainment_Apple_CarPlay_Android_Auto === "Yes" ||
+        car.carPlayAndroidAuto === true || car.apple_carplay === true || false,
       speakers: parseInt(
-        car.Infotainment_Speakers?.toString().replace(/[^0-9]/g, "") || "4"
+        (car["Infotainment Speakers"] || car.Infotainment_Speakers ||
+         car.speakers || 4)?.toString().replace(/[^0-9]/g, "") || "4"
       ),
       digitalCluster:
-        car.Infotainment_Digital_Instrument_Cluster === "Yes" ||
-        car.digitalCluster ||
-        false,
+        car["Infotainment Digital Instrument Cluster"] === true || car.Infotainment_Digital_Instrument_Cluster === "Yes" ||
+        car.digitalCluster === true || car.digital_cluster === true || false,
       connectedTech:
-        car.Infotainment_Connected_Tech === "Yes" || car.connectedTech || false,
+        car["Features Connected Tech"] === true || car.Infotainment_Connected_Tech === "Yes" ||
+        car.connectedTech === true || car.connected_tech === true || false,
       wirelessCharging:
-        car.Infotainment_Wireless_Charging === "Yes" ||
-        car.wirelessCharging ||
-        false,
+        car["Features Wireless Charging"] === true || car.Infotainment_Wireless_Charging === "Yes" ||
+        car.wirelessCharging === true || car.wireless_charging === true || false,
       usbPorts: parseInt(
-        car.Infotainment_USB_Ports?.toString().replace(/[^0-9]/g, "") || "2"
+        (car["Infotainment USB Ports"] || car.Infotainment_USB_Ports || 
+         car.usbPorts || car.usb_ports || 2)?.toString().replace(/[^0-9]/g, "") || "2"
       ),
       bluetoothConnectivity:
-        car.Infotainment_Bluetooth_Connectivity === "Yes" ||
-        car.bluetoothConnectivity ||
-        true,
+        car["Infotainment Bluetooth"] === true || car.Infotainment_Bluetooth_Connectivity === "Yes" ||
+        car.bluetoothConnectivity !== false || true,
 
       // Practicality
       bootSpace: parseInt(
-        car.Practicality_Boot_Space_litres?.toString().replace(/[^0-9]/g, "") ||
-          "350"
+        (car["Dimensions Boot Liters"] || car.Practicality_Boot_Space_litres || 
+         car.bootSpace || car.boot_space || 350)?.toString().replace(/[^0-9]/g, "") || "350"
       ),
       foldableSeats:
-        car.Practicality_Foldable_Seats === "Yes" || car.foldableSeats || true,
+        car["Practicality Foldable Seats"] === true || car.Practicality_Foldable_Seats === "Yes" ||
+        car.foldableSeats !== false || true,
       roofRails:
-        car.Practicality_Roof_Rails === "Yes" || car.roofRails || false,
+        car["Practicality Roof Rails"] === true || car.Practicality_Roof_Rails === "Yes" || 
+        car.roofRails === true || false,
       spareWheel:
-        car.Practicality_Spare_Wheel_Type === "Alloy"
+        car["Practicality Spare Wheel Type"] === "Alloy" || car.Practicality_Spare_Wheel_Type === "Alloy"
           ? "Full"
           : ((car.spareWheel || "Full") as "Full" | "Stepney" | "None"),
 
       // Exterior
       wheelSize: parseInt(
-        car.Exterior_Wheel_Type?.toString().replace(/[^0-9]/g, "") || "15"
+        (car["Exterior Wheel Size"] || car.Exterior_Wheel_Type || 
+         car.wheelSize || car.wheel_size || 15)?.toString().replace(/[^0-9]/g, "") || "15"
       ),
       ledHeadlights:
-        car.Exterior_LED_Headlamps === "Yes" || car.ledHeadlights || false,
-      drl: car.Exterior_LED_DRLs === "Yes" || car.drl || false,
-      fogLamps: car.Exterior_Fog_Lamps === "Yes" || car.fogLamps || false,
+        car["Features Led Lights"] === true || car.Exterior_LED_Headlamps === "Yes" || 
+        car.ledHeadlights === true || false,
+      drl: car["Exterior LED DRLs"] === true || car.Exterior_LED_DRLs === "Yes" || 
+        car.drl === true || false,
+      fogLamps: car["Exterior Fog Lamps"] === true || car.Exterior_Fog_Lamps === "Yes" || 
+        car.fogLamps === true || false,
       autoFoldingMirrors:
-        car["Exterior_Auto-Folding_ORVMs"] === "Yes" ||
-        car.autoFoldingMirrors ||
-        false,
+        car["Exterior Auto-Folding ORVMs"] === true || car["Exterior_Auto-Folding_ORVMs"] === "Yes" ||
+        car.autoFoldingMirrors === true || false,
       alloyWheels:
-        car.Exterior_Wheel_Type?.includes("Alloy") || car.alloyWheels || false,
+        car["Features Alloy Wheels"] === true || car.Exterior_Wheel_Type?.includes("Alloy") || 
+        car.alloyWheels === true || car.alloy_wheels === true || false,
 
       // ADAS
       adaptiveCruise:
-        car.ADAS_Adaptive_Cruise_Control === "Yes" ||
-        car.adaptiveCruise ||
-        false,
+        car["Safety Adas Level 2"] === true || car.ADAS_Adaptive_Cruise_Control === "Yes" ||
+        car.adaptiveCruise === true || car.adaptive_cruise === true || false,
       laneKeepAssist:
-        car.ADAS_Lane_Keep_Assist === "Yes" || car.laneKeepAssist || false,
+        car["ADAS Lane Keep Assist"] === true || car.ADAS_Lane_Keep_Assist === "Yes" || 
+        car.laneKeepAssist === true || car.lane_keep_assist === true || false,
       collisionWarning:
-        car.ADAS_Forward_Collision_Warning === "Yes" ||
-        car.collisionWarning ||
-        false,
+        car["ADAS Forward Collision Warning"] === true || car.ADAS_Forward_Collision_Warning === "Yes" ||
+        car.collisionWarning === true || car.collision_warning === true || false,
       automaticEmergencyBraking:
-        car.ADAS_Autonomous_Emergency_Braking_AEB === "Yes" ||
-        car.automaticEmergencyBraking ||
-        false,
+        car["ADAS Autonomous Emergency Braking"] === true || car.ADAS_Autonomous_Emergency_Braking_AEB === "Yes" ||
+        car.automaticEmergencyBraking === true || car.automatic_emergency_braking === true || false,
       blindSpotMonitor:
-        car.ADAS_Blind_Spot_Monitoring === "Yes" ||
-        car.blindSpotMonitor ||
-        false,
+        car["ADAS Blind Spot Monitoring"] === true || car.ADAS_Blind_Spot_Monitoring === "Yes" ||
+        car.blindSpotMonitor === true || car.blind_spot === true || false,
       rearCrossTrafficAlert:
-        car["ADAS_Rear_Cross-Traffic_Alert"] === "Yes" ||
-        car.rearCrossTrafficAlert ||
-        false,
+        car["ADAS Rear Cross-Traffic Alert"] === true || car["ADAS_Rear_Cross-Traffic_Alert"] === "Yes" ||
+        car.rearCrossTrafficAlert === true || false,
       driverAttentionAlert:
-        car.ADAS_Driver_Drowsiness_Detection === "Yes" ||
-        car.driverAttentionAlert ||
-        false,
+        car["ADAS Driver Drowsiness Detection"] === true || car.ADAS_Driver_Drowsiness_Detection === "Yes" ||
+        car.driverAttentionAlert === true || false,
 
       // Ownership
-      warranty: car.Ownership_Warranty || car.warranty || "3 Years/1,00,000 km",
+      warranty: car["Warranty Years"] && car["Warranty Km"] 
+        ? `${car["Warranty Years"]} Years/${car["Warranty Km"]?.toLocaleString('en-IN')} km`
+        : (car.Ownership_Warranty || car.warranty || "3 Years/1,00,000 km"),
       serviceInterval: parseInt(
-        car.Ownership_Service_Interval?.toString().replace(/[^0-9]/g, "") ||
-          "10000"
+        (car["Warranty Service Km"] || car.Ownership_Service_Interval || 
+         car.serviceInterval || car.service_interval_km || 10000)?.toString().replace(/[^0-9]/g, "") || "10000"
       ),
       roadsideAssistance:
-        car.Ownership_Roadside_Assistance !== "No" ||
-        car.roadsideAssistance ||
-        true,
+        car["Ownership Roadside Assistance"] !== "No" || car.Ownership_Roadside_Assistance !== "No" ||
+        car.roadsideAssistance !== false || true,
 
       // Additional fields
       images: car.images || [],

@@ -300,15 +300,19 @@ def query_chain(
         logger.debug(f"Sample metadata: make={metadata.get('make', 'MISSING')}, price_lakhs={metadata.get('price_lakhs', 'MISSING')}")
         
         # Format car information for frontend
-        # Frontend expects: name, price (in lakhs), mileage, and optionally score
+        # Include MongoDB _id so Next.js API can fetch full car data
         car_info = {
+            "id": metadata.get("id", ""),  # MongoDB _id for fetching full data
             "name": f"{metadata.get('make', 'Unknown')} {metadata.get('model', 'Unknown')}",
+            "make": metadata.get("make", "Unknown"),  # Also include separately for search
+            "model": metadata.get("model", "Unknown"),
             "price": metadata.get("price_lakhs", 0),  # Frontend expects price in lakhs
             "mileage": metadata.get("mileage", 0),     # Frontend expects mileage in kmpl
         }
         
         # Add optional fields if available
         if "variant" in metadata and metadata["variant"]:
+            car_info["variant"] = metadata["variant"]
             car_info["name"] = f"{car_info['name']} {metadata['variant']}"
         
         if "year" in metadata:
@@ -316,6 +320,9 @@ def query_chain(
         
         if "body_type" in metadata:
             car_info["body_type"] = metadata["body_type"]
+        
+        if "segment" in metadata:
+            car_info["segment"] = metadata["segment"]
         
         if "fuel_type" in metadata:
             car_info["fuel_type"] = metadata["fuel_type"]
@@ -325,6 +332,9 @@ def query_chain(
         
         if "airbags" in metadata:
             car_info["airbags"] = metadata["airbags"]
+        
+        if "transmission_type" in metadata:
+            car_info["transmission_type"] = metadata["transmission_type"]
         
         # Add score if available (from similarity search)
         if hasattr(doc, 'score'):
