@@ -1,8 +1,11 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 import ExploreSection from "@/components/features/explore-section";
+import ModernSearchBar from "@/components/ui/modern-search-bar";
 import { Car } from "@/types/car";
 
 export default function ExplorePage() {
@@ -11,10 +14,8 @@ export default function ExplorePage() {
   const searchParamValue = searchParams.get("search") ?? "";
   const [cars, setCars] = useState<Car[]>([]);
   const [isLoadingCars, setIsLoadingCars] = useState(true);
-  const [searchInput, setSearchInput] = useState(searchParamValue);
 
   useEffect(() => {
-    setSearchInput(searchParamValue);
     const fetchCars = async () => {
       setIsLoadingCars(true);
       try {
@@ -40,10 +41,10 @@ export default function ExplorePage() {
     fetchCars();
   }, [searchParamValue]);
 
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = searchInput.trim();
-    const nextUrl = trimmed ? `/explore?search=${encodeURIComponent(trimmed)}` : "/explore";
+  const handleSearch = (query: string) => {
+    const nextUrl = query
+      ? `/explore?search=${encodeURIComponent(query)}`
+      : "/explore";
     router.push(nextUrl);
   };
 
@@ -65,39 +66,66 @@ export default function ExplorePage() {
 
   return (
     <>
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 mb-10">
-        <div className="bg-card border border-border rounded-2xl p-6 lg:p-8 mt-4">
-          <div className="flex flex-col gap-6">
-            <div>
-              <p className="text-sm font-medium text-primary mb-2">
-                Start exploring
-              </p>
-              <h1 className="text-3xl sm:text-4xl font-bold">
+      {/* Hero Search Section */}
+      <section className="relative bg-gradient-to-br from-background via-primary/5 to-accent/5 border-b border-border">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-4xl mx-auto"
+          >
+            {/* Badge */}
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-primary">
+                  Explore Our Collection
+                </span>
+              </div>
+            </div>
+
+            {/* Heading */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
                 Search our{" "}
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   premium catalog
                 </span>
               </h1>
+              <p className="text-muted-foreground text-lg">
+                Find your perfect car from our extensive collection
+              </p>
             </div>
-            <form onSubmit={handleSearch} className="flex flex-col gap-4 sm:flex-row">
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Try 'EV under 20 lakh with fast charging'"
-                className="flex-1 px-4 py-3 rounded-lg border border-border bg-input focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+
+            {/* Modern Search Bar */}
+            <ModernSearchBar
+              onSearch={handleSearch}
+              onAISearch={handleSearch}
+              placeholder="Try 'EV under 20 lakh with fast charging'"
+              size="md"
+            />
+
+            {/* Current Search */}
+            {searchParamValue && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-4 text-center"
               >
-                Search
-              </button>
-            </form>
-          </div>
+                <span className="text-sm text-muted-foreground">
+                  Showing results for:{" "}
+                  <span className="font-semibold text-foreground">
+                    "{searchParamValue}"
+                  </span>
+                </span>
+              </motion.div>
+            )}
+          </motion.div>
         </div>
       </section>
 
+      {/* Results Section */}
       <ExploreSection
         cars={cars}
         isLoading={isLoadingCars}
@@ -109,4 +137,3 @@ export default function ExplorePage() {
     </>
   );
 }
-

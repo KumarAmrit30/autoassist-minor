@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
   Heart,
@@ -12,6 +12,8 @@ import {
   Cog,
   Eye,
   GitCompare,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Car } from "@/types/car";
 
@@ -33,6 +35,7 @@ export default function CarCard({
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showMoreFeatures, setShowMoreFeatures] = useState(false);
 
   const getFuelTypeColor = (transmissionType: string) => {
     switch (transmissionType) {
@@ -49,12 +52,20 @@ export default function CarCard({
     }
   };
 
-  const features = [
+  // Get all available features
+  const allFeatures = [
     { label: "Sunroof", available: car.sunroof },
     { label: "Wireless Charging", available: car.wirelessCharging },
     { label: "LED Headlights", available: car.ledHeadlights },
-    { label: "+2 more", available: true },
+    { label: "Ventilated Seats", available: car.ventilatedSeats },
+    { label: "Cruise Control", available: car.cruiseControl },
+    { label: "Keyless Entry", available: car.keylessEntry },
+    { label: "Parking Camera", available: car.parkingCamera },
+    { label: "Parking Sensors", available: car.parkingSensors },
   ].filter((feature) => feature.available);
+
+  const visibleFeatures = showMoreFeatures ? allFeatures : allFeatures.slice(0, 3);
+  const hasMoreFeatures = allFeatures.length > 3;
 
   // Get current image URL with fallback logic
   const getCurrentImageUrl = () => {
@@ -115,8 +126,8 @@ export default function CarCard({
 
   return (
     <motion.div
-      className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 group h-full flex flex-col"
-      whileHover={{ y: -5 }}
+      className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 group h-full flex flex-col"
+      whileHover={{ y: -2 }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -200,88 +211,116 @@ export default function CarCard({
       </div>
 
       {/* Content */}
-      <div className="p-6 flex-1 flex flex-col">
+      <div className="p-4 flex-1 flex flex-col">
         {/* Header */}
-        <div className="mb-4">
-          <h3 className="text-xl font-bold text-foreground mb-1">
-            {car.brand} {car.model}
+        <div className="mb-3">
+          <h3 className="text-base font-bold text-foreground mb-1 line-clamp-1">
+            {car.brand && car.model ? `${car.brand} ${car.model}` : car.variant || "Car"}
           </h3>
-          <p className="text-muted-foreground text-sm">{car.variant}</p>
+          {car.variant && (
+            <p className="text-muted-foreground text-xs line-clamp-1">{car.variant}</p>
+          )}
         </div>
 
         {/* Price and Rating */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div>
-            <span className="text-2xl font-bold text-primary">
-              ₹{car.priceInLakhs.toFixed(2)} Lakh
+            <span className="text-lg font-bold text-primary">
+              ₹{car.priceInLakhs.toFixed(2)}L
             </span>
             <p className="text-xs text-muted-foreground">Ex-showroom</p>
           </div>
 
           <div className="flex items-center space-x-1">
-            <Star className="w-4 h-4 text-yellow-500 fill-current" />
-            <span className="text-sm font-medium">{car.rating}</span>
+            <Star className="w-3 h-3 text-yellow-500 fill-current" />
+            <span className="text-xs font-medium">{car.rating?.toFixed(1) || "4.0"}</span>
             <span className="text-xs text-muted-foreground">
-              ({car.reviewCount})
+              ({car.reviewCount || 0})
             </span>
           </div>
         </div>
 
         {/* Specifications */}
-        <div className="grid grid-cols-3 gap-4 mb-4 text-center">
-          <div className="flex flex-col items-center space-y-1">
-            <Fuel className="w-4 h-4 text-muted-foreground" />
+        <div className="grid grid-cols-3 gap-2 mb-3 text-center">
+          <div className="flex flex-col items-center space-y-0.5">
+            <Fuel className="w-3 h-3 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">
-              {car.mileageARAI} kmpl
+              {car.mileageARAI?.toFixed(1) || "0"} kmpl
             </span>
           </div>
 
-          <div className="flex flex-col items-center space-y-1">
-            <Cog className="w-4 h-4 text-muted-foreground" />
+          <div className="flex flex-col items-center space-y-0.5">
+            <Cog className="w-3 h-3 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">
-              {car.transmissionType}
+              {car.transmissionType || "Manual"}
             </span>
           </div>
 
-          <div className="flex flex-col items-center space-y-1">
-            <Users className="w-4 h-4 text-muted-foreground" />
+          <div className="flex flex-col items-center space-y-0.5">
+            <Users className="w-3 h-3 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">5 Seater</span>
           </div>
         </div>
 
         {/* Features */}
-        <div className="mb-6 flex-1">
+        <div className="mb-3 flex-1">
           <div className="flex flex-wrap gap-1">
-            {features.slice(0, 4).map((feature, index) => (
+            {visibleFeatures.map((feature, index) => (
               <span
                 key={index}
-                className="px-2 py-1 bg-muted rounded text-xs text-muted-foreground"
+                className="px-2 py-0.5 bg-muted rounded text-xs text-muted-foreground"
               >
                 {feature.label}
               </span>
             ))}
+            {hasMoreFeatures && (
+              <motion.button
+                onClick={() => setShowMoreFeatures(!showMoreFeatures)}
+                className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium hover:bg-primary/20 transition-colors flex items-center gap-1"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {showMoreFeatures ? (
+                  <>
+                    <ChevronUp className="w-3 h-3" />
+                    Show Less
+                  </>
+                ) : (
+                  <>
+                    +{allFeatures.length - 3} more
+                    <ChevronDown className="w-3 h-3" />
+                  </>
+                )}
+              </motion.button>
+            )}
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3">
+        <div className="flex space-x-2">
           <motion.button
-            onClick={() => onViewDetails(car._id!)}
-            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
+            onClick={() => {
+              if (car._id) {
+                onViewDetails(car._id);
+              } else {
+                console.error("Car ID is missing:", car);
+              }
+            }}
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center space-x-1"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-3.5 h-3.5" />
             <span>View Details</span>
           </motion.button>
 
           <motion.button
             onClick={() => onCompare(car._id!)}
-            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground py-1.5 px-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <GitCompare className="w-4 h-4" />
+            <GitCompare className="w-3.5 h-3.5" />
           </motion.button>
         </div>
       </div>

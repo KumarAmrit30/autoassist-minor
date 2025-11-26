@@ -7,13 +7,11 @@ import {
   Loader2,
   AlertCircle,
   X,
-  Car,
   TrendingUp,
-  DollarSign,
-  Fuel,
-  Gauge,
 } from "lucide-react";
 import { ragClient, type RagChatResponse } from "@/services/ai/rag-client";
+import CarCard from "@/components/features/car-card";
+import { Car } from "@/types/car";
 
 interface RagRecommendationPanelProps {
   query: string;
@@ -179,14 +177,146 @@ export default function RagRecommendationPanel({
               {/* Recommendations */}
               {response.recommendations.length > 0 && (
                 <div>
-                  <h3 className="font-semibold mb-4 flex items-center">
-                    <TrendingUp className="w-5 h-5 mr-2 text-primary" />
-                    Recommended Cars ({response.recommendations.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {response.recommendations.map((car, index) => (
-                      <CarCard key={index} car={car} rank={index + 1} />
-                    ))}
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold flex items-center">
+                      <TrendingUp className="w-6 h-6 mr-2 text-primary" />
+                      Top Recommendations
+                    </h3>
+                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-semibold">
+                      {response.recommendations.length} Cars
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {response.recommendations.map((car, index) => {
+                      // Convert the car data to match our Car type
+                      const carData: Car = {
+                        _id: car._id || car.id,
+                        brand: car.brand || car.make || car.Make || "",
+                        model: car.model || car.Model || "",
+                        variant: car.variant || car.Variant || "",
+                        year: car.year || car.Year || 2024,
+                        bodyType: car.bodyType || car.BodyType || "",
+                        segment: car.segment || car.Segment || "",
+                        priceInLakhs: car.price || car.Price || car.priceInLakhs || 0,
+                        
+                        // Dimensions
+                        length: car.length || 4000,
+                        width: car.width || 1700,
+                        height: car.height || 1500,
+                        wheelbase: car.wheelbase || 2500,
+                        groundClearance: car.groundClearance || 165,
+                        weight: car.weight || 1200,
+                        turningRadius: car.turningRadius || 5,
+                        fuelTank: car.fuelTank || 45,
+                        
+                        // Engine
+                        displacement: car.displacement || 1000,
+                        cylinders: car.cylinders || 3,
+                        turboNA: (car.turboNA || "NA") as "Turbo" | "NA",
+                        powerBhp: car.powerBhp || car.power || 60,
+                        torqueNm: car.torqueNm || 90,
+                        
+                        // Transmission
+                        transmissionType: (car.transmission || car.transmissionType || "Manual") as any,
+                        gearCount: car.gearCount || 5,
+                        driveType: (car.driveType || "FWD") as any,
+                        
+                        // Performance
+                        acceleration0to100: car.acceleration0to100 || 12,
+                        topSpeed: car.topSpeed || 180,
+                        
+                        // Fuel
+                        mileageARAI: car.mileage || car.Mileage || car.mileageARAI || 15,
+                        emissionStandard: car.emissionStandard || "BS6",
+                        adBlueSystem: car.adBlueSystem || false,
+                        
+                        // Safety
+                        airbags: car.airbags || 2,
+                        abs: car.abs !== false,
+                        esc: car.esc !== false,
+                        crashTestRating: car.crashTestRating || car.rating || 4,
+                        parkingSensors: car.parkingSensors || false,
+                        parkingCamera: car.parkingCamera || false,
+                        isofix: car.isofix || false,
+                        hillHoldControl: car.hillHoldControl || false,
+                        tractionControl: car.tractionControl || false,
+                        electronicBrakeDistribution: car.electronicBrakeDistribution !== false,
+                        
+                        // Comfort
+                        airConditioning: car.airConditioning !== false,
+                        ventilatedSeats: car.ventilatedSeats || false,
+                        keylessEntry: car.keylessEntry || false,
+                        cruiseControl: car.cruiseControl || false,
+                        sunroof: car.sunroof || false,
+                        heatedSeats: car.heatedSeats || false,
+                        lumbarSupport: car.lumbarSupport || false,
+                        adjustableHeadrest: car.adjustableHeadrest !== false,
+                        rearArmrest: car.rearArmrest || false,
+                        cupHolders: car.cupHolders || 2,
+                        powerWindows: car.powerWindows !== false,
+                        centralLocking: car.centralLocking !== false,
+                        
+                        // Infotainment
+                        touchscreenSize: car.touchscreenSize || 7,
+                        carPlayAndroidAuto: car.carPlayAndroidAuto || false,
+                        speakers: car.speakers || 4,
+                        digitalCluster: car.digitalCluster || false,
+                        connectedTech: car.connectedTech || false,
+                        wirelessCharging: car.wirelessCharging || false,
+                        usbPorts: car.usbPorts || 2,
+                        bluetoothConnectivity: car.bluetoothConnectivity !== false,
+                        
+                        // Practicality
+                        bootSpace: car.bootSpace || 350,
+                        foldableSeats: car.foldableSeats !== false,
+                        roofRails: car.roofRails || false,
+                        spareWheel: (car.spareWheel || "Full") as any,
+                        
+                        // Exterior
+                        wheelSize: car.wheelSize || 15,
+                        ledHeadlights: car.ledHeadlights || false,
+                        drl: car.drl || false,
+                        fogLamps: car.fogLamps || false,
+                        autoFoldingMirrors: car.autoFoldingMirrors || false,
+                        alloyWheels: car.alloyWheels || false,
+                        
+                        // ADAS
+                        adaptiveCruise: car.adaptiveCruise || false,
+                        laneKeepAssist: car.laneKeepAssist || false,
+                        collisionWarning: car.collisionWarning || false,
+                        automaticEmergencyBraking: car.automaticEmergencyBraking || false,
+                        blindSpotMonitor: car.blindSpotMonitor || false,
+                        rearCrossTrafficAlert: car.rearCrossTrafficAlert || false,
+                        driverAttentionAlert: car.driverAttentionAlert || false,
+                        
+                        // Ownership
+                        warranty: car.warranty || "3 Years/1,00,000 km",
+                        serviceInterval: car.serviceInterval || 10000,
+                        roadsideAssistance: car.roadsideAssistance !== false,
+                        
+                        // Additional
+                        images: car.images || [],
+                        rating: car.rating || car.crashTestRating || 4,
+                        reviewCount: car.reviewCount || 0,
+                      };
+                      
+                      return (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <CarCard
+                            car={carData}
+                            onViewDetails={(id) => window.location.href = `/cars/${id}`}
+                            onCompare={(id) => console.log("Compare:", id)}
+                            onToggleFavorite={(id) => console.log("Favorite:", id)}
+                            onToggleWishlist={(id) => console.log("Wishlist:", id)}
+                          />
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -207,87 +337,4 @@ export default function RagRecommendationPanel({
   );
 }
 
-// Car Card Component
-function CarCard({ car, rank }: { car: Record<string, any>; rank: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: rank * 0.1 }}
-      className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-lg transition-all"
-    >
-      {/* Rank Badge */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center justify-center w-8 h-8 bg-primary/10 text-primary rounded-full text-sm font-bold">
-          {rank}
-        </div>
-        <Car className="w-5 h-5 text-muted-foreground" />
-      </div>
-
-      {/* Car Name */}
-      <h4 className="font-semibold mb-2 line-clamp-1">
-        {car.name || `${car.brand || car.make || car.Make || ""} ${car.model || car.Model || ""}`.trim()}
-      </h4>
-
-      {/* Details Grid */}
-      <div className="space-y-2 text-sm">
-        {(car.price || car.Price) && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground flex items-center">
-              <DollarSign className="w-4 h-4 mr-1" />
-              Price
-            </span>
-            <span className="font-medium">
-              ₹{(car.price || car.Price).toFixed(2)}L
-            </span>
-          </div>
-        )}
-
-        {(car.fuel_type || car.FuelType || car.fuel) && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground flex items-center">
-              <Fuel className="w-4 h-4 mr-1" />
-              Fuel
-            </span>
-            <span className="font-medium">
-              {car.fuel_type || car.FuelType || car.fuel}
-            </span>
-          </div>
-        )}
-
-        {(car.mileage || car.Mileage) && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground flex items-center">
-              <Gauge className="w-4 h-4 mr-1" />
-              Mileage
-            </span>
-            <span className="font-medium">
-              {(car.mileage || car.Mileage).toFixed(1)} km/l
-            </span>
-          </div>
-        )}
-
-        {/* Score if available */}
-        {car.score !== undefined && (
-          <div className="mt-3 pt-3 border-t border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Match Score</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full"
-                    style={{ width: `${Math.min(car.score, 100)}%` }}
-                  />
-                </div>
-                <span className="text-xs font-medium">
-                  {Math.round(car.score)}%
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
 
