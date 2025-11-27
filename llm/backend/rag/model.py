@@ -41,8 +41,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", None)
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-pro")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", None)
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
-LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.7"))
-LLM_TOP_P = float(os.getenv("LLM_TOP_P", "0.9"))
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.4"))  # Lowered from 0.7 for more factual responses
+LLM_TOP_P = float(os.getenv("LLM_TOP_P", "0.95"))  # Slightly increased for better coherence
 
 
 class GroqLLM(LLM):
@@ -53,8 +53,8 @@ class GroqLLM(LLM):
     
     api_key: str = Field(default="")
     model: str = Field(default="llama-3.1-70b-versatile")
-    temperature: float = Field(default=0.7)
-    max_tokens: int = Field(default=1024)
+    temperature: float = Field(default=0.4)
+    max_tokens: int = Field(default=2048)  # Increased for longer, more detailed responses
     
     @property
     def _llm_type(self) -> str:
@@ -119,7 +119,7 @@ class GeminiLLM(LLM):
     
     api_key: str = Field(default="")
     model: str = Field(default="gemini-pro")
-    temperature: float = Field(default=0.7)
+    temperature: float = Field(default=0.4)
     
     @property
     def _llm_type(self) -> str:
@@ -295,7 +295,7 @@ def get_llm() -> LLM:
                 api_key=GROQ_API_KEY,
                 model=GROQ_MODEL,
                 temperature=LLM_TEMPERATURE,
-                max_tokens=2048
+                max_tokens=3072  # Increased for detailed car comparisons
             )
             # Test connection
             try:

@@ -39,6 +39,7 @@ export default function CarDetailsPage() {
   const { addToComparison, isInComparison, canAddMore } = useComparison();
 
   const [car, setCar] = useState<Car | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [relatedCars, setRelatedCars] = useState<Car[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -63,6 +64,14 @@ export default function CarDetailsPage() {
     }
   };
 
+  // Handler to switch variants
+  const handleVariantChange = async (variantId: string) => {
+    if (variantId === car?._id) return; // Already viewing this variant
+    
+    setIsLoading(true);
+    router.push(`/cars/${variantId}`);
+  };
+
   useEffect(() => {
     const fetchCarDetails = async () => {
       setIsLoading(true);
@@ -71,16 +80,17 @@ export default function CarDetailsPage() {
         if (response.ok) {
           const data = await response.json();
           setCar(data.car);
+          setSelectedVariantId(data.car._id);
           
-          // Fetch related cars
+          // Fetch related cars using grouped API to avoid showing variants
           const relatedResponse = await fetch(
-            `/api/cars?brand=${data.car.brand}&limit=4`
+            `/api/cars/grouped?brand=${data.car.brand}&limit=4`
           );
           if (relatedResponse.ok) {
             const relatedData = await relatedResponse.json();
-            // Filter out current car
+            // Filter out current car model
             const filtered = relatedData.cars.filter(
-              (c: Car) => c._id !== carId
+              (c: Car) => c.model !== data.car.model
             );
             setRelatedCars(filtered.slice(0, 3));
           }
@@ -95,7 +105,7 @@ export default function CarDetailsPage() {
     };
 
     fetchCarDetails();
-  }, [carId]);
+  }, [carId, router]);
 
   const getImages = () => {
     if (!car) return ["/api/placeholder/800/600"];
@@ -308,6 +318,55 @@ export default function CarDetailsPage() {
               </div>
               <p className="text-sm text-muted-foreground">Ex-showroom price</p>
             </div>
+
+            {/* Variant Selector */}
+            {car.variants && car.variants.length > 1 && (
+              <div className="bg-card border border-border rounded-2xl p-4">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+                  Available Variants ({car.variants.length})
+                </h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {car.variants.map((variant) => (
+                    <motion.button
+                      key={variant._id}
+                      onClick={() => handleVariantChange(variant._id)}
+                      disabled={variant._id === selectedVariantId}
+                      className={`w-full text-left p-3 rounded-lg border transition-all ${
+                        variant._id === selectedVariantId
+                          ? "border-primary bg-primary/10 cursor-default"
+                          : "border-border hover:border-primary/50 hover:bg-muted cursor-pointer"
+                      }`}
+                      whileHover={variant._id !== selectedVariantId ? { scale: 1.02 } : {}}
+                      whileTap={variant._id !== selectedVariantId ? { scale: 0.98 } : {}}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm flex items-center gap-2">
+                            {variant.name}
+                            {variant._id === selectedVariantId && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-primary text-primary-foreground">
+                                <Check className="w-3 h-3 mr-1" />
+                                Current
+                              </span>
+                            )}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            <span>{variant.transmission}</span>
+                            <span>•</span>
+                            <span>{variant.fuelType}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-primary">
+                            ₹{variant.price.toFixed(2)}L
+                          </p>
+                        </div>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Key Specs */}
             <div className="grid grid-cols-2 gap-4">

@@ -22,7 +22,8 @@ export default function ExplorePage() {
         const searchQuery = searchParamValue
           ? `&search=${encodeURIComponent(searchParamValue)}`
           : "";
-        const response = await fetch(`/api/cars?limit=12${searchQuery}`);
+        // Use grouped API to show one card per model (not per variant)
+        const response = await fetch(`/api/cars/grouped?limit=12${searchQuery}`);
         if (response.ok) {
           const data = await response.json();
           setCars(data.cars);

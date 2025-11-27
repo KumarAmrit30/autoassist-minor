@@ -114,6 +114,20 @@ export interface Car {
   reviewCount?: number;
   isFavorite?: boolean;
   isInWishlist?: boolean;
+
+  // Variant grouping (when cars are grouped by model)
+  variantCount?: number; // Number of variants for this model
+  priceRange?: {
+    min: number;
+    max: number;
+  };
+  variants?: Array<{
+    _id: string;
+    name: string;
+    price: number;
+    transmission: string;
+    fuelType: string;
+  }>;
 }
 
 export interface CarFilter {

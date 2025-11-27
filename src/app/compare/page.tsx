@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { X as XIcon, Trash2, GitCompare, Check, ArrowLeft, Home } from "lucide-react";
+import { X as XIcon, Trash2, GitCompare, Check, ArrowLeft, Home, ChevronDown } from "lucide-react";
 import { Car } from "@/types/car";
 import Image from "next/image";
 import { useComparison } from "@/contexts/comparison-context";
@@ -11,8 +11,47 @@ import Link from "next/link";
 
 export default function ComparePage() {
   const router = useRouter();
-  const { comparisonCars, removeFromComparison, clearComparison } =
+  const { comparisonCars, removeFromComparison, clearComparison, replaceInComparison } =
     useComparison();
+  
+  // Track all variants for each car model
+  const [carVariants, setCarVariants] = useState<Record<string, Car[]>>({});
+  const [loadingVariants, setLoadingVariants] = useState<Record<string, boolean>>({});
+
+  // Fetch variants for each car in comparison
+  useEffect(() => {
+    const fetchVariantsForCars = async () => {
+      for (const car of comparisonCars) {
+        if (!car._id) continue;
+        
+        // Skip if already loaded
+        if (carVariants[car._id]) continue;
+        
+        setLoadingVariants(prev => ({ ...prev, [car._id!]: true }));
+        
+        try {
+          const response = await fetch(`/api/cars/${car._id}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.allVariants && data.allVariants.length > 0) {
+              setCarVariants(prev => ({
+                ...prev,
+                [car._id!]: data.allVariants
+              }));
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching variants for car ${car._id}:`, error);
+        } finally {
+          setLoadingVariants(prev => ({ ...prev, [car._id!]: false }));
+        }
+      }
+    };
+    
+    if (comparisonCars.length > 0) {
+      fetchVariantsForCars();
+    }
+  }, [comparisonCars]);
 
   // Redirect if no cars to compare
   useEffect(() => {
@@ -20,6 +59,24 @@ export default function ComparePage() {
       router.push("/explore");
     }
   }, [comparisonCars.length, router]);
+
+  // Handle variant change
+  const handleVariantChange = async (oldCarId: string, newVariantId: string) => {
+    if (!newVariantId || newVariantId === oldCarId) return;
+    
+    try {
+      const response = await fetch(`/api/cars/${newVariantId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.car) {
+          // Replace the car in comparison with the new variant
+          replaceInComparison(oldCarId, data.car);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching new variant:", error);
+    }
+  };
 
   if (comparisonCars.length === 0) {
     return (
@@ -220,28 +277,60 @@ export default function ComparePage() {
                 <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
               </button>
               
-              <Link
-                href={`/cars/${car._id}`}
-                className="block group"
-              >
-                <div className="relative aspect-video mb-3 rounded-lg overflow-hidden bg-muted group-hover:opacity-90 transition-opacity">
-                  <Image
-                    src={getCarImage(car)}
-                    alt={`${car.brand} ${car.model}`}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <h3 className="font-bold text-lg mb-1 line-clamp-1 group-hover:text-primary transition-colors">
-                  {car.brand} {car.model}
-                </h3>
+              <div>
+                <Link
+                  href={`/cars/${car._id}`}
+                  className="block group"
+                >
+                  <div className="relative aspect-video mb-3 rounded-lg overflow-hidden bg-muted group-hover:opacity-90 transition-opacity">
+                    <Image
+                      src={getCarImage(car)}
+                      alt={`${car.brand} ${car.model}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <h3 className="font-bold text-lg mb-1 line-clamp-1 group-hover:text-primary transition-colors">
+                    {car.brand} {car.model}
+                  </h3>
+                </Link>
+                
+                {/* Variant Selector */}
+                {carVariants[car._id!] && carVariants[car._id!].length > 1 && (
+                  <div className="mb-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      Variant ({carVariants[car._id!].length} available)
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={car._id}
+                        onChange={(e) => handleVariantChange(car._id!, e.target.value)}
+                        className="w-full px-2 py-1.5 text-sm bg-muted border border-border rounded-lg appearance-none cursor-pointer hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all pr-8"
+                      >
+                        {carVariants[car._id!].map((variant) => (
+                          <option key={variant._id} value={variant._id}>
+                            {variant.variant} - ₹{variant.priceInLakhs?.toFixed(2)}L
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </div>
+                )}
+                
+                {loadingVariants[car._id!] && (
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Loading variants...
+                  </p>
+                )}
+                
                 <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
                   {car.variant}
                 </p>
                 <div className="text-xl font-bold text-primary">
                   ₹{car.priceInLakhs.toFixed(2)}L
                 </div>
-              </Link>
+              </div>
             </div>
           ))}
         </div>

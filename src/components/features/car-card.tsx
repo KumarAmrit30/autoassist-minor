@@ -244,18 +244,36 @@ export default function CarCard({
           <h3 className="text-base font-bold text-foreground mb-1 line-clamp-1">
             {car.brand && car.model ? `${car.brand} ${car.model}` : car.variant || "Car"}
           </h3>
-          {car.variant && (
+          {car.variant && !car.variantCount && (
             <p className="text-muted-foreground text-xs line-clamp-1">{car.variant}</p>
+          )}
+          {car.variantCount && car.variantCount > 1 && (
+            <p className="text-muted-foreground text-xs">
+              Starting from {car.variant}
+            </p>
           )}
         </div>
 
         {/* Price and Rating */}
         <div className="flex items-center justify-between mb-3">
           <div>
-            <span className="text-lg font-bold text-primary">
-              ₹{car.priceInLakhs.toFixed(2)}L
-            </span>
-            <p className="text-xs text-muted-foreground">Ex-showroom</p>
+            {car.priceRange && car.variantCount && car.variantCount > 1 ? (
+              <>
+                <span className="text-lg font-bold text-primary">
+                  ₹{car.priceRange.min.toFixed(2)}L - ₹{car.priceRange.max.toFixed(2)}L
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {car.variantCount} Variants
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="text-lg font-bold text-primary">
+                  ₹{car.priceInLakhs.toFixed(2)}L
+                </span>
+                <p className="text-xs text-muted-foreground">Ex-showroom</p>
+              </>
+            )}
           </div>
 
           <div className="flex items-center space-x-1">

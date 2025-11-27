@@ -13,6 +13,7 @@ interface ComparisonContextType {
   comparisonCars: Car[];
   addToComparison: (car: Car) => boolean;
   removeFromComparison: (carId: string) => void;
+  replaceInComparison: (oldCarId: string, newCar: Car) => void;
   clearComparison: () => void;
   isInComparison: (carId: string) => boolean;
   canAddMore: boolean;
@@ -107,6 +108,13 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
     setComparisonCars((prev) => prev.filter((car) => car._id !== carId));
   }, []);
 
+  // Replace car in comparison (for variant switching)
+  const replaceInComparison = useCallback((oldCarId: string, newCar: Car) => {
+    setComparisonCars((prev) =>
+      prev.map((car) => (car._id === oldCarId ? newCar : car))
+    );
+  }, []);
+
   // Clear all comparisons
   const clearComparison = useCallback(() => {
     setComparisonCars([]);
@@ -126,6 +134,7 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
     comparisonCars,
     addToComparison,
     removeFromComparison,
+    replaceInComparison,
     clearComparison,
     isInComparison,
     canAddMore,

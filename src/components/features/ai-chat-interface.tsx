@@ -161,10 +161,14 @@ export default function AIChatInterface({
 
     try {
       // Call RAG API (with Groq + vector search)
+      // IMPORTANT: Pass chatId as session_id to maintain conversation context
       const response = await fetch("/api/ai/rag-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: text }),
+        body: JSON.stringify({ 
+          query: text,
+          session_id: chatId  // This maintains chat history across messages
+        }),
       });
 
       if (!response.ok) throw new Error("Failed to get response");
@@ -312,10 +316,7 @@ export default function AIChatInterface({
                 <div className="flex items-center space-x-2">
                   <Sparkles className="w-5 h-5 text-primary" />
                   <div>
-                    <h2 className="text-lg font-bold">AI Car Assistant</h2>
-                    <p className="text-xs text-muted-foreground">
-                      Powered by RAG + Groq AI ⚡
-                    </p>
+                    <h2 className="text-lg font-bold">AutoAssist</h2>
                   </div>
                 </div>
               </div>

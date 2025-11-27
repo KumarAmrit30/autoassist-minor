@@ -5,55 +5,96 @@ Uses LLM to understand user intent and extract constraints.
 
 import logging
 import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from backend.rag.model import get_llm
 
 logger = logging.getLogger(__name__)
 
 # Template for extracting filters from queries
-FILTER_EXTRACTION_PROMPT = """You are a query analyzer for a car recommendation system. Extract structured filters from the user's query.
+FILTER_EXTRACTION_PROMPT = """You are a precise query analyzer for a car recommendation system in India. Extract structured filters from the user's natural language query.
 
 User Query: "{query}"
 
-Extract the following information if mentioned:
-- price_max: Maximum price in lakhs (float)
-- price_min: Minimum price in lakhs (float)
-- body_type: Body type (Hatchback, Sedan, SUV, MUV, Coupe, Convertible, Pickup Truck, Micro SUV)
-- fuel_type: Fuel type (Petrol, Diesel, Electric, Hybrid, CNG)
-- segment: Segment (Mini, A-Segment, B-Segment, C-Segment, D-Segment, Luxury, SUV, etc)
+## Your Task:
+Extract ONLY the filters that are explicitly mentioned or strongly implied in the query. Be conservative - only extract what is clear.
+
+## Available Filters (extract if mentioned):
+- price_max: Maximum price in lakhs (float) - e.g., 15.0 for "under 15 lakhs"
+- price_min: Minimum price in lakhs (float) - e.g., 10.0 for "above 10 lakhs"
+- body_type: One of: Hatchback, Sedan, SUV, MUV, Coupe, Convertible, Pickup Truck, Micro SUV
+- fuel_type: One of: Petrol, Diesel, Electric, Hybrid, CNG
+- segment: One of: Mini, A-Segment, B-Segment, C-Segment, D-Segment, Luxury, Premium, Budget
 - mileage_min: Minimum mileage in kmpl (float)
-- seating_capacity: Number of seats (5, 7, 8)
-- transmission_type: Transmission (Manual, Automatic, AMT, CVT, DCT)
-- year_min: Minimum year (int)
+- seating_capacity: Number of seats - typically 5, 7, or 8
+- transmission_type: One of: Manual, Automatic, AMT, CVT, DCT
+- year_min: Minimum manufacturing year (integer)
 
-Important rules:
-- "under X lakhs" means price_max = X
-- "above X lakhs" means price_min = X
-- "between X and Y lakhs" means price_min = X, price_max = Y
-- "fuel efficient" means mileage_min = 18
-- "very fuel efficient" or "high mileage" means mileage_min = 22
-- "family car" typically means seating_capacity = 7 or body_type = SUV/MUV
-- "city car" typically means body_type = Hatchback
-- "luxury" means segment = Luxury
+## Interpretation Rules:
+**Price:**
+- "under ₹X", "below ₹X", "less than ₹X" → price_max = X
+- "above ₹X", "over ₹X", "more than ₹X" → price_min = X
+- "between ₹X and ₹Y" → price_min = X, price_max = Y
+- "around ₹X" → price_min = X*0.9, price_max = X*1.1 (approximate)
 
-Respond ONLY with a valid JSON object. If a filter is not mentioned, omit it. Empty object {} if no filters.
+**Fuel Efficiency:**
+- "fuel efficient", "good mileage" → mileage_min = 18.0
+- "very fuel efficient", "high mileage", "best mileage" → mileage_min = 22.0
+- "economical" → mileage_min = 20.0
 
-Example 1:
+**Body Type & Use Cases:**
+- "family car", "7 seater", "family SUV" → seating_capacity = 7 OR body_type = SUV/MUV
+- "city car", "compact car" → body_type = Hatchback
+- "luxury car", "premium car" → segment = Luxury
+- "budget car", "affordable" → segment = Budget (if price not specified)
+
+**Fuel Type:**
+- "electric", "EV" → fuel_type = Electric
+- "hybrid" → fuel_type = Hybrid
+- "petrol", "diesel" → fuel_type = Petrol/Diesel
+
+**Transmission:**
+- "automatic", "auto" → transmission_type = Automatic
+- "manual" → transmission_type = Manual
+
+## Output Format:
+Respond with ONLY a valid JSON object. If no filters are mentioned, return {{}}.
+
+## Examples:
+
 Query: "SUV under 15 lakhs"
 Response: {{"body_type": "SUV", "price_max": 15.0}}
 
-Example 2:
 Query: "fuel efficient sedan"
 Response: {{"body_type": "Sedan", "mileage_min": 18.0}}
 
-Example 3:
 Query: "electric car for family"
 Response: {{"fuel_type": "Electric", "seating_capacity": 7}}
 
-Now extract filters from the user query above. Respond with ONLY the JSON object:"""
+Query: "luxury sedan above 30 lakhs with automatic transmission"
+Response: {{"segment": "Luxury", "body_type": "Sedan", "price_min": 30.0, "transmission_type": "Automatic"}}
+
+Query: "best fuel efficient cars under 12 lakhs"
+Response: {{"price_max": 12.0, "mileage_min": 22.0}}
+
+## SPECIAL CASES (when there's chat history):
+
+Previous: "SUV under 15 lakhs"
+Current: "Tell me more" OR "aur batao"
+Response: {{"body_type": "SUV", "price_max": 15.0}}
+
+Previous: "fuel efficient sedan"
+Current: "any other from Maruti?"
+Response: {{"body_type": "Sedan", "mileage_min": 18.0, "make": "Maruti_Suzuki"}}
+
+Previous: "family car under 25 lakhs"
+Current: "haan aur batao"
+Response: {{"seating_capacity": 7, "price_max": 25.0}}
+
+Now extract filters from: "{query}"
+Respond with ONLY the JSON object (no explanation):"""
 
 
-def extract_filters_from_query(query: str) -> Dict[str, Any]:
+def extract_filters_from_query(query: str, chat_history: List = None) -> Dict[str, Any]:
     """
     Use LLM to extract structured filters from natural language query.
     
@@ -67,8 +108,32 @@ def extract_filters_from_query(query: str) -> Dict[str, Any]:
         # Get LLM
         llm = get_llm()
         
+        # Add chat history context if available
+        history_context = ""
+        if chat_history and len(chat_history) > 0:
+            # Get last 3 exchanges for context
+            recent_history = chat_history[-3:] if len(chat_history) > 3 else chat_history
+            history_lines = []
+            for human_query, ai_response in recent_history:
+                history_lines.append(f"Previous query: {human_query}")
+            history_context = "\n".join(history_lines)
+            history_context = f"""
+Previous conversation context:
+{history_context}
+
+IMPORTANT: 
+- If current query is vague ("tell me more", "aur batao", "any other?"), extract filters from the MOST RECENT previous query
+- If current query says "from [brand]", add that brand to existing filters
+- If current query says "remember the [X]", look for that X in previous queries
+- If current query has new specific filters, UPDATE/ADD to previous filters (don't replace completely)
+
+Consider the context above when extracting filters:
+"""
+        
         # Create prompt - use replace() instead of format() to avoid issues with JSON braces
         prompt = FILTER_EXTRACTION_PROMPT.replace("{query}", query)
+        if history_context:
+            prompt = history_context + prompt
         
         # Get LLM response
         response = llm.invoke(prompt)

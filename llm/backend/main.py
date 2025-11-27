@@ -3,7 +3,7 @@ FastAPI application for car recommendations RAG chatbot.
 """
 
 import logging
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 import os
 
 from fastapi import FastAPI, HTTPException
@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 
 from backend.rag.chain import create_chain, query_chain
 from backend.rag.query_parser import extract_filters_from_query, optimize_query_for_search
+from backend.rag.refiner import refine_response_with_llm
+from backend.rag.query_understanding import understand_query_with_llm
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -37,8 +39,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Store chains per session (in production, use Redis or similar)
+# Store chains and chat history per session (in production, use Redis or similar)
 session_chains: Dict[str, Any] = {}
+session_histories: Dict[str, List] = {}
+
+# Gemini refinement LLM (separate from RAG retrieval LLM)
+refinement_llm = None
 
 
 class ChatRequest(BaseModel):
@@ -113,9 +119,26 @@ async def chat(request: ChatRequest):
     try:
         logger.info(f"Received chat request: query='{request.query}', filters={request.filters}, session_id={request.session_id}")
         
-        # Step 1: Extract filters from natural language query using LLM
-        logger.info("Extracting filters from query...")
-        auto_filters = extract_filters_from_query(request.query)
+        # Generate session ID if not provided (do this first!)
+        session_id = request.session_id or "default"
+        
+        # Get chat history for this session
+        chat_history = session_histories.get(session_id, [])
+        logger.info(f"Session: {session_id}, Chat history length: {len(chat_history)}")
+        if chat_history:
+            logger.info(f"Last exchange: Q='{chat_history[-1][0][:50]}...' A='{chat_history[-1][1][:50]}...'")
+        
+        # Step 1: Use Gemini to deeply understand the query with context
+        logger.info("🧠 Understanding query with Gemini/Groq...")
+        query_understanding = understand_query_with_llm(request.query, chat_history=chat_history)
+        
+        # Extract filters from understanding
+        auto_filters = query_understanding.get("filters", {})
+        search_keywords = query_understanding.get("search_keywords", request.query)
+        combined_intent = query_understanding.get("combined_intent", request.query)
+        
+        logger.info(f"Combined Intent: {combined_intent}")
+        logger.info(f"Search Keywords: {search_keywords}")
         
         # Step 2: Merge with explicit filters (explicit takes precedence)
         final_filters = auto_filters.copy()
@@ -125,23 +148,38 @@ async def chat(request: ChatRequest):
         logger.info(f"Auto-extracted filters: {auto_filters}")
         logger.info(f"Final filters (merged): {final_filters}")
         
-        # Step 3: Optimize query for semantic search (remove filter terms)
-        optimized_query = optimize_query_for_search(request.query, final_filters)
+        # Step 3: Use Gemini-optimized search keywords instead of basic optimization
+        optimized_query = search_keywords  # Use keywords from Gemini understanding
         logger.info(f"Optimized query: '{request.query}' -> '{optimized_query}'")
-        
-        # Generate session ID if not provided
-        session_id = request.session_id or "default"
         
         # Get or create chain with filters
         chain = get_or_create_chain(session_id, final_filters)
         
-        # Query chain with optimized query
-        result = query_chain(chain, optimized_query)
+        # Query chain with optimized query and chat history
+        result = query_chain(chain, optimized_query, chat_history=chat_history)
         
-        logger.info(f"Generated response with {len(result['recommended'])} recommendations")
+        logger.info(f"✅ RAG retrieved {len(result['recommended'])} unique car models")
+        
+        # ENHANCEMENT: Refine response using Gemini/Groq with general automotive knowledge
+        logger.info("🔧 Refining response with Gemini/Groq...")
+        refined_answer = refine_response_with_llm(
+            original_query=request.query,
+            rag_response=result["answer"],
+            recommended_cars=result["recommended"],
+            chat_history=chat_history
+        )
+        
+        # Update chat history with refined answer
+        session_histories[session_id] = chat_history + [(request.query, refined_answer)]
+        # Keep only last 10 exchanges
+        if len(session_histories[session_id]) > 10:
+            session_histories[session_id] = session_histories[session_id][-10:]
+        
+        logger.info(f"✅ Response refined and enhanced")
+        logger.info(f"✅ Session {session_id} now has {len(session_histories[session_id])} message pairs in history")
         
         return ChatResponse(
-            answer=result["answer"],
+            answer=refined_answer,  # Use refined answer instead of original
             recommended=result["recommended"],
             sources=result["sources"]
         )
