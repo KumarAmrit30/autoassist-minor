@@ -126,7 +126,53 @@ class ConversationalRetrievalChain:
     def _build_chain(self):
         """Build the retrieval chain using LCEL."""
         def format_docs(docs):
-            return "\n\n".join(doc.page_content for doc in docs)
+            """Format documents with rich metadata for better context."""
+            if not docs:
+                return "No relevant cars found in the database."
+            
+            formatted = []
+            for i, doc in enumerate(docs, 1):
+                page_content = doc.page_content if hasattr(doc, 'page_content') else str(doc)
+                metadata = doc.metadata if hasattr(doc, 'metadata') else {}
+                
+                # Build a structured entry for each car
+                car_entry = f"--- Car {i} ---\n"
+                
+                # Add the description/page_content first
+                car_entry += f"Description: {page_content}\n"
+                
+                # Add key metadata fields for easy reference
+                if metadata:
+                    key_fields = []
+                    if metadata.get('make'):
+                        key_fields.append(f"Brand: {metadata['make']}")
+                    if metadata.get('model'):
+                        key_fields.append(f"Model: {metadata['model']}")
+                    if metadata.get('variant'):
+                        key_fields.append(f"Variant: {metadata['variant']}")
+                    if metadata.get('year'):
+                        key_fields.append(f"Year: {metadata['year']}")
+                    if metadata.get('price_lakhs'):
+                        key_fields.append(f"Price: ₹{metadata['price_lakhs']:.2f} lakhs")
+                    if metadata.get('mileage'):
+                        key_fields.append(f"Mileage: {metadata['mileage']} kmpl")
+                    if metadata.get('fuel_type'):
+                        key_fields.append(f"Fuel Type: {metadata['fuel_type']}")
+                    if metadata.get('body_type'):
+                        key_fields.append(f"Body Type: {metadata['body_type']}")
+                    if metadata.get('transmission_type'):
+                        key_fields.append(f"Transmission: {metadata['transmission_type']}")
+                    if metadata.get('airbags'):
+                        key_fields.append(f"Airbags: {metadata['airbags']}")
+                    if metadata.get('power_bhp'):
+                        key_fields.append(f"Power: {metadata['power_bhp']} bhp")
+                    
+                    if key_fields:
+                        car_entry += " | ".join(key_fields) + "\n"
+                
+                formatted.append(car_entry)
+            
+            return "\n\n".join(formatted)
         
         def format_chat_history(history):
             if not history:
@@ -255,6 +301,73 @@ def create_chain(filters: Dict[str, Any] = None, k: int = None) -> Conversationa
     return chain
 
 
+def post_process_answer(answer: str) -> str:
+    """
+    Post-process the LLM answer to improve quality and consistency.
+    Removes markdown artifacts and ensures clean formatting.
+    
+    Args:
+        answer: Raw LLM response
+        
+    Returns:
+        Cleaned and improved answer
+    """
+    if not answer:
+        return "I apologize, but I couldn't generate a response. Please try rephrasing your question."
+    
+    # Remove any unwanted prefixes/suffixes
+    answer = answer.strip()
+    
+    # Remove common LLM artifacts
+    answer = answer.replace("Answer:", "").replace("Response:", "").strip()
+    
+    import re
+    
+    # Remove markdown headers (###, ##, #) - replace with plain text
+    answer = re.sub(r'^#{1,6}\s+(.+)$', r'\1', answer, flags=re.MULTILINE)
+    
+    # Remove bold markers (**text** or __text__)
+    answer = re.sub(r'\*\*(.+?)\*\*', r'\1', answer)
+    answer = re.sub(r'__(.+?)__', r'\1', answer)
+    
+    # Remove italic markers (*text* or _text_)
+    answer = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'\1', answer)
+    answer = re.sub(r'(?<!_)_(?!_)(.+?)(?<!_)_(?!_)', r'\1', answer)
+    
+    # Clean up bullet points - ensure consistent format
+    # Replace various bullet formats with simple "• "
+    answer = re.sub(r'^[\*\-\+]\s+', '• ', answer, flags=re.MULTILINE)
+    
+    # Fix numbered lists followed by bullets (convert to bullets)
+    answer = re.sub(r'^\d+\.\s+', '• ', answer, flags=re.MULTILINE)
+    
+    # Clean up excessive newlines (more than 2 consecutive)
+    answer = re.sub(r'\n{3,}', '\n\n', answer)
+    
+    # Remove any remaining markdown-style formatting artifacts
+    answer = answer.replace('**•', '•')
+    answer = answer.replace('**', '')
+    
+    # Ensure bullets have proper spacing
+    lines = answer.split('\n')
+    cleaned_lines = []
+    for line in lines:
+        # Don't strip lines that are intentionally empty (paragraph breaks)
+        if line.strip():
+            # Ensure bullet points have space after them
+            if line.strip().startswith('•') and not line.strip().startswith('• '):
+                line = line.replace('•', '• ', 1)
+            cleaned_lines.append(line.strip())
+        else:
+            # Keep empty lines for paragraph breaks
+            if cleaned_lines and cleaned_lines[-1] != '':
+                cleaned_lines.append('')
+    
+    answer = '\n'.join(cleaned_lines)
+    
+    return answer
+
+
 def query_chain(
     chain: ConversationalRetrievalChain,
     query: str,
@@ -282,10 +395,15 @@ def query_chain(
     result = chain(inputs)
     
     # Extract answer and source documents
-    answer = result.get("answer", "")
+    raw_answer = result.get("answer", "")
     source_documents = result.get("source_documents", [])
     
+    # Post-process the answer for better quality
+    answer = post_process_answer(raw_answer)
+    
     # Extract recommended cars from source documents
+    # De-duplicate by brand+model to avoid showing multiple variants
+    seen_models = set()
     recommended = []
     sources = []
     
@@ -297,15 +415,33 @@ def query_chain(
         # DEBUG: Log what we're receiving
         logger.debug(f"Document type: {type(doc)}")
         logger.debug(f"Document metadata keys: {list(metadata.keys())[:10] if metadata else 'NO METADATA'}")
-        logger.debug(f"Sample metadata: make={metadata.get('make', 'MISSING')}, price_lakhs={metadata.get('price_lakhs', 'MISSING')}")
+        
+        # De-duplicate: Skip if we already have this brand+model
+        make = metadata.get("make", "Unknown")
+        model = metadata.get("model", "Unknown")
+        
+        # Clean up brand/model names for comparison
+        # Remove underscores and normalize case
+        make_clean = make.replace("_", " ").strip().lower()
+        model_clean = model.replace("_", " ").strip().lower()
+        model_key = f"{make_clean}|{model_clean}"
+        
+        logger.debug(f"Processing: {make} {model} (key: {model_key})")
+        
+        if model_key in seen_models:
+            logger.debug(f"  → SKIPPED (duplicate model)")
+            continue  # Skip this variant
+        
+        seen_models.add(model_key)
+        logger.debug(f"  → ADDED (unique model)")
         
         # Format car information for frontend
         # Include MongoDB _id so Next.js API can fetch full car data
         car_info = {
             "id": metadata.get("id", ""),  # MongoDB _id for fetching full data
-            "name": f"{metadata.get('make', 'Unknown')} {metadata.get('model', 'Unknown')}",
-            "make": metadata.get("make", "Unknown"),  # Also include separately for search
-            "model": metadata.get("model", "Unknown"),
+            "name": f"{make} {model}",
+            "make": make,  # Also include separately for search
+            "model": model,
             "price": metadata.get("price_lakhs", 0),  # Frontend expects price in lakhs
             "mileage": metadata.get("mileage", 0),     # Frontend expects mileage in kmpl
         }
@@ -348,7 +484,14 @@ def query_chain(
             "metadata": metadata
         })
     
-    logger.info(f"Retrieved {len(recommended)} recommendations")
+    logger.info(f"✅ De-duplicated to {len(recommended)} unique car models (from {len(source_documents)} total variants)")
+    logger.info(f"   Models: {[r.get('name', 'Unknown') for r in recommended[:5]]}")
+    
+    # Sort recommendations by relevance (could be by score if available)
+    # For now, keep them in retrieval order (most relevant first)
+    
+    # Log answer length for debugging
+    logger.info(f"Generated answer length: {len(answer)} characters")
     
     return {
         "answer": answer,

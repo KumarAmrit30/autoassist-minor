@@ -126,7 +126,7 @@ QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
 QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "cars_rag")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-RETRIEVAL_K = int(os.getenv("RETRIEVAL_K", "5"))
+RETRIEVAL_K = int(os.getenv("RETRIEVAL_K", "8"))  # Increased from 5 to 8 for better coverage
 
 
 def get_qdrant_client() -> QdrantClient:
@@ -217,41 +217,54 @@ def build_qdrant_filter(filters: Dict[str, Any]) -> Optional[Filter]:
             )
         )
     
-    # Make/Brand filter
-    if "make" in filters and filters["make"]:
-        conditions.append(
-            FieldCondition(
-                key="make",
-                match=MatchValue(value=filters["make"])
-            )
-        )
+    # Make/Brand filter - DISABLED
+    # Note: We rely on semantic search for brand filtering instead of metadata filter
+    # because Qdrant requires indexes for metadata filters, and brand names in queries
+    # are better handled via semantic similarity search anyway.
+    # Semantic search will find "Mahindra", "Tata", etc. in the car description text.
     
     # Body type filter
     if "body_type" in filters and filters["body_type"]:
-        conditions.append(
-            FieldCondition(
-                key="body_type",
-                match=MatchValue(value=filters["body_type"])
+        # Handle both single value and list
+        body_type_value = filters["body_type"]
+        if isinstance(body_type_value, list):
+            body_type_value = body_type_value[0] if body_type_value else None
+        
+        if body_type_value:
+            conditions.append(
+                FieldCondition(
+                    key="body_type",
+                    match=MatchValue(value=str(body_type_value))
+                )
             )
-        )
     
     # Fuel type filter
     if "fuel_type" in filters and filters["fuel_type"]:
-        conditions.append(
-            FieldCondition(
-                key="fuel_type",
-                match=MatchValue(value=filters["fuel_type"])
+        fuel_type_value = filters["fuel_type"]
+        if isinstance(fuel_type_value, list):
+            fuel_type_value = fuel_type_value[0] if fuel_type_value else None
+        
+        if fuel_type_value:
+            conditions.append(
+                FieldCondition(
+                    key="fuel_type",
+                    match=MatchValue(value=str(fuel_type_value))
+                )
             )
-        )
     
     # Segment filter
     if "segment" in filters and filters["segment"]:
-        conditions.append(
-            FieldCondition(
-                key="segment",
-                match=MatchValue(value=filters["segment"])
+        segment_value = filters["segment"]
+        if isinstance(segment_value, list):
+            segment_value = segment_value[0] if segment_value else None
+        
+        if segment_value:
+            conditions.append(
+                FieldCondition(
+                    key="segment",
+                    match=MatchValue(value=str(segment_value))
+                )
             )
-        )
     
     # Year filters
     if "year_min" in filters:
@@ -289,12 +302,17 @@ def build_qdrant_filter(filters: Dict[str, Any]) -> Optional[Filter]:
     
     # Transmission type filter
     if "transmission_type" in filters and filters["transmission_type"]:
-        conditions.append(
-            FieldCondition(
-                key="transmission_type",
-                match=MatchValue(value=filters["transmission_type"])
+        transmission_value = filters["transmission_type"]
+        if isinstance(transmission_value, list):
+            transmission_value = transmission_value[0] if transmission_value else None
+        
+        if transmission_value:
+            conditions.append(
+                FieldCondition(
+                    key="transmission_type",
+                    match=MatchValue(value=str(transmission_value))
+                )
             )
-        )
     
     # Safety filters
     if "airbags_min" in filters:
@@ -407,11 +425,33 @@ class CustomQdrantRetriever(BaseRetriever):
         if self.qdrant_filter:
             query_params["query_filter"] = self.qdrant_filter
         
-        # Query Qdrant
-        results = self.client.query_points(
-            collection_name=self.collection_name,
-            **query_params
-        )
+        # Query Qdrant with error handling for missing indexes
+        try:
+            results = self.client.query_points(
+                collection_name=self.collection_name,
+                **query_params
+            )
+        except Exception as e:
+            error_msg = str(e)
+            # If filter fails due to missing index, retry without filter
+            if "Index required" in error_msg or "not found" in error_msg.lower():
+                logger.warning(f"Filter failed due to missing index: {error_msg}")
+                logger.info("Retrying query without filters...")
+                
+                # Retry without filter
+                query_params_no_filter = {
+                    "query": NearestQuery(nearest=query_embedding),
+                    "limit": self.k,
+                    "with_payload": True,
+                    "with_vectors": False
+                }
+                results = self.client.query_points(
+                    collection_name=self.collection_name,
+                    **query_params_no_filter
+                )
+            else:
+                # Re-raise if it's a different error
+                raise
         
         # Convert to LangChain Documents with FULL payload as metadata
         documents = []

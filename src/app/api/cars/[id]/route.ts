@@ -3,6 +3,20 @@ import { getDatabase, COLLECTIONS } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { Car } from "@/types/car";
 
+/**
+ * Helper function to determine fuel type from engine type string
+ */
+function determineFuelType(engineType: string): string {
+  if (!engineType) return "Petrol";
+  
+  const type = engineType.toLowerCase();
+  if (type.includes("electric")) return "Electric";
+  if (type.includes("diesel")) return "Diesel";
+  if (type.includes("hybrid")) return "Hybrid";
+  if (type.includes("cng")) return "CNG";
+  return "Petrol";
+}
+
 // GET /api/cars/[id] - Get individual car details
 export async function GET(
   request: NextRequest,
@@ -25,6 +39,18 @@ export async function GET(
     if (!car) {
       return NextResponse.json({ error: "Car not found" }, { status: 404 });
     }
+
+    // Fetch all variants of the same model
+    const brand = car["Identification Brand"] || car.brand;
+    const model = car["Identification Model"] || car.model;
+    
+    const allVariants = await db.collection(COLLECTIONS.CARS)
+      .find({
+        "Identification Brand": brand,
+        "Identification Model": model
+      })
+      .sort({ "Pricing Delhi Ex Showroom Price": 1 }) // Sort by price
+      .toArray();
 
     // Transform MongoDB document to Car object (same logic as cars route)
     const transformedCar: Car = {
@@ -256,6 +282,18 @@ export async function GET(
       images: car.images || [],
       rating: car.rating || Math.random() * 2 + 3, // Random rating between 3-5
       reviewCount: car.reviewCount || Math.floor(Math.random() * 100) + 10,
+      
+      // Variant information
+      variantCount: allVariants.length,
+      variants: allVariants.map((v: any) => ({
+        _id: v._id.toString(),
+        name: v["Identification Variant"] || "Unknown",
+        price: v["Pricing Delhi Ex Showroom Price"] 
+          ? parseFloat(v["Pricing Delhi Ex Showroom Price"]) / 100000 
+          : 0,
+        transmission: v["Engine Transmission"] || "Manual",
+        fuelType: determineFuelType(v["Engine Type"])
+      }))
     };
 
     return NextResponse.json({ car: transformedCar });

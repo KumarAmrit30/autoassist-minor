@@ -135,6 +135,8 @@ def create_collection(client: QdrantClient, collection_name: str, vector_size: i
         # Create payload indexes for filterable fields (required for Qdrant Cloud)
         logger.info("Creating payload indexes for filterable fields...")
         filterable_fields = [
+            ("make", PayloadSchemaType.KEYWORD),  # Added make/brand index
+            ("model", PayloadSchemaType.KEYWORD),  # Added model index
             ("price_lakhs", PayloadSchemaType.FLOAT),
             ("mileage", PayloadSchemaType.FLOAT),
             ("body_type", PayloadSchemaType.KEYWORD),
