@@ -178,14 +178,47 @@ class ConversationalRetrievalChain:
             if not history:
                 return ""
             formatted = []
+            # Extract key context from last 5 exchanges
             for msg in history[-5:]:  # Last 5 messages
                 if isinstance(msg, dict):
                     if "human" in msg:
                         formatted.append(f"Human: {msg['human']}")
                     if "ai" in msg:
-                        formatted.append(f"AI: {msg['ai']}")
+                        # Extract key information from AI response for context
+                        ai_response = msg['ai']
+                        import re
+                        context_summary = []
+                        
+                        # Extract price
+                        prices = re.findall(r'₹(\d+(?:\.\d+)?)\s*lakhs?', ai_response)
+                        if prices:
+                            context_summary.append(f"Price: ₹{prices[0]}L")
+                        
+                        # Extract body type
+                        body_types = re.findall(r'\b(SUV|Sedan|Hatchback|MUV)\b', ai_response, re.IGNORECASE)
+                        if body_types:
+                            context_summary.append(f"Type: {body_types[0]}")
+                        
+                        if context_summary:
+                            formatted.append(f"AI: [{', '.join(context_summary)}] {ai_response[:200]}...")
+                        else:
+                            formatted.append(f"AI: {ai_response[:200]}...")
                 elif isinstance(msg, tuple):
-                    formatted.append(f"Human: {msg[0]}\nAI: {msg[1]}")
+                    user_q, ai_a = msg
+                    formatted.append(f"Human: {user_q}")
+                    # Extract context from AI response
+                    import re
+                    context_summary = []
+                    prices = re.findall(r'₹(\d+(?:\.\d+)?)\s*lakhs?', ai_a)
+                    if prices:
+                        context_summary.append(f"Price: ₹{prices[0]}L")
+                    body_types = re.findall(r'\b(SUV|Sedan|Hatchback|MUV)\b', ai_a, re.IGNORECASE)
+                    if body_types:
+                        context_summary.append(f"Type: {body_types[0]}")
+                    if context_summary:
+                        formatted.append(f"AI: [{', '.join(context_summary)}] {ai_a[:200]}...")
+                    else:
+                        formatted.append(f"AI: {ai_a[:200]}...")
             return "\n".join(formatted)
         
         def retrieve_and_format(inputs: Dict[str, Any]) -> Dict[str, Any]:

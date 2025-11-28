@@ -15,6 +15,7 @@ from backend.rag.chain import create_chain, query_chain
 from backend.rag.query_parser import extract_filters_from_query, optimize_query_for_search
 from backend.rag.refiner import refine_response_with_llm
 from backend.rag.query_understanding import understand_query_with_llm
+from backend.rag.query_expansion import get_best_expanded_query
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -148,9 +149,19 @@ async def chat(request: ChatRequest):
         logger.info(f"Auto-extracted filters: {auto_filters}")
         logger.info(f"Final filters (merged): {final_filters}")
         
-        # Step 3: Use Gemini-optimized search keywords instead of basic optimization
+        # Step 3: Expand query for better retrieval (optional enhancement)
+        # Use the search keywords from understanding, but can expand further if needed
         optimized_query = search_keywords  # Use keywords from Gemini understanding
-        logger.info(f"Optimized query: '{request.query}' -> '{optimized_query}'")
+        
+        # For vague queries, try query expansion to improve retrieval
+        if any(phrase in request.query.lower() for phrase in ["aur batao", "tell me more", "any other", "haan"]):
+            logger.info("🔍 Expanding vague query for better retrieval...")
+            expanded_query = get_best_expanded_query(search_keywords, chat_history=chat_history)
+            if expanded_query and expanded_query != search_keywords:
+                optimized_query = expanded_query
+                logger.info(f"Query expanded: '{search_keywords}' -> '{optimized_query}'")
+        
+        logger.info(f"Final optimized query: '{request.query}' -> '{optimized_query}'")
         
         # Get or create chain with filters
         chain = get_or_create_chain(session_id, final_filters)

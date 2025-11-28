@@ -90,13 +90,16 @@ Output:
 }}
 
 ## Rules:
-- If current query is vague ("tell me more", "aur batao"), USE filters from previous query
+- **CRITICAL**: If current query is vague ("tell me more", "aur batao", "haan aur batao", "any other"), 
+  you MUST extract ALL filters and context from the MOST RECENT previous query
 - If previous query mentioned price/budget, CARRY IT FORWARD unless explicitly changed
-- For Hindi/Hinglish ("25 lakh ke andar"), extract the same filters as English equivalent
+- For Hindi/Hinglish ("25 lakh ke andar", "haan aur batao"), extract the same filters as English equivalent
 - "family car" usually means 7-seater OR SUV/MUV body type
 - "fuel efficient" means mileage_min: 18.0 (or 22.0 for "very fuel efficient")
 - **Brand names (Mahindra, Tata, Maruti, etc.) should go in "search_keywords", NOT in filters**
 - Do NOT use "make" filter - include brand name in search_keywords instead (e.g., "Mahindra cars", "Tata SUVs")
+- **For vague queries, the "combined_intent" MUST explicitly reference what was discussed before**
+  Example: "User wants more [previous requirement] options" or "User wants additional [previous criteria]"
 
 Now analyze the query above and respond with ONLY the JSON object:"""
 
@@ -116,21 +119,54 @@ def understand_query_with_llm(
         Dictionary with combined_intent, filters, search_keywords, context_notes
     """
     try:
-        # Format chat history
+        # Format chat history with rich context extraction
         history_str = "No previous conversation"
         if chat_history and len(chat_history) > 0:
             history_lines = []
-            for q, a in chat_history[-3:]:  # Last 3 exchanges
+            # Extract key information from last 5 exchanges (increased from 3)
+            for q, a in chat_history[-5:]:  # Last 5 exchanges for better context
                 history_lines.append(f"User: {q}")
-                # Include brief context from AI response
-                if "lakhs" in a:
-                    # Extract price mentions
-                    import re
-                    prices = re.findall(r'₹(\d+(?:\.\d+)?)\s*lakhs?', a)
-                    if prices:
-                        history_lines.append(f"Assistant: [Recommended cars at ₹{prices[0]} lakhs]")
+                
+                # Extract rich context from AI response
+                import re
+                context_parts = []
+                
+                # Extract price mentions
+                prices = re.findall(r'₹(\d+(?:\.\d+)?)\s*lakhs?', a)
+                if prices:
+                    context_parts.append(f"Price range: ₹{prices[0]} lakhs")
+                
+                # Extract body types mentioned
+                body_types = re.findall(r'\b(SUV|Sedan|Hatchback|MUV|Coupe|Convertible)\b', a, re.IGNORECASE)
+                if body_types:
+                    context_parts.append(f"Body type: {body_types[0]}")
+                
+                # Extract fuel types
+                fuel_types = re.findall(r'\b(Electric|Hybrid|Petrol|Diesel|CNG)\b', a, re.IGNORECASE)
+                if fuel_types:
+                    context_parts.append(f"Fuel type: {fuel_types[0]}")
+                
+                # Extract brand mentions
+                brands = re.findall(r'\b(Tata|Mahindra|Maruti|Hyundai|Kia|Toyota|Honda|Ford|MG|Nissan|Skoda|Volkswagen)\b', a, re.IGNORECASE)
+                if brands:
+                    context_parts.append(f"Brand: {brands[0]}")
+                
+                # Extract mileage mentions
+                mileage = re.findall(r'(\d+(?:\.\d+)?)\s*kmpl', a)
+                if mileage:
+                    context_parts.append(f"Mileage: {mileage[0]} kmpl")
+                
+                # Extract seating capacity
+                seating = re.findall(r'(\d+)\s*seater', a, re.IGNORECASE)
+                if seating:
+                    context_parts.append(f"Seating: {seating[0]}-seater")
+                
+                # Build context summary
+                if context_parts:
+                    history_lines.append(f"Assistant: [{', '.join(context_parts)}] - {a[:150]}...")
                 else:
-                    history_lines.append(f"Assistant: {a[:100]}...")
+                    history_lines.append(f"Assistant: {a[:200]}...")
+            
             history_str = "\n".join(history_lines)
         
         # Build prompt

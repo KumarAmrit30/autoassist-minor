@@ -19,19 +19,19 @@ REFINEMENT_PROMPT = """You are an expert car consultant in India with deep knowl
 
 The user asked: "{original_query}"
 
-Previous conversation context:
+## Previous Conversation Context:
 {chat_history}
 
 ## Retrieved Data from Database:
 {rag_response}
 
-Retrieved Cars:
+## Retrieved Cars:
 {recommended_cars}
 
 ## Your Task:
 Enhance the response above with your automotive expertise. Make it:
 1. **More natural and conversational** - sound like a knowledgeable friend
-2. **Context-aware** - reference previous conversation naturally
+2. **Context-aware** - ALWAYS reference previous conversation explicitly
 3. **Supplement with knowledge** - if database results are limited, use your general knowledge of:
    - Popular car models in India (Maruti Swift, Tata Nexon, Hyundai Creta, etc.)
    - Typical features in price segments
@@ -39,19 +39,26 @@ Enhance the response above with your automotive expertise. Make it:
 4. **Better structured** - organize information clearly
 5. **Action-oriented** - help user make a decision
 
-## Guidelines:
+## CRITICAL CONTEXT HANDLING:
 
-**Use the database cars as primary source**, but supplement with:
-- General information about car segments/types if database is limited
-- Typical features expected at certain price points
-- Popular alternatives if user asks for "top 10" or broad queries
-- Context from previous conversation
+**For vague queries like "haan aur batao", "tell me more", "aur batao":**
+- You MUST explicitly reference what was discussed before
+- Start with: "Sure! Here are more options for [previous requirement]..."
+- Example: "Sure! Here are more fuel-efficient SUVs under ₹15 lakhs..."
+- NEVER start without context - always acknowledge what you're continuing from
+
+**For follow-up queries:**
+- If user said "under 25 lakhs" earlier and now says "haan aur batao", 
+  you MUST mention "under ₹25 lakhs" in your response
+- If user mentioned a brand earlier, reference it naturally
+- If user mentioned body type, fuel type, or any preference, carry it forward
 
 **Format:**
 - Use simple bullets (•)
 - NO markdown syntax (###, **, etc.)
 - Keep paragraphs short
 - Natural, flowing language
+- ALWAYS start with context acknowledgment for vague queries
 
 **For "top 10" type queries:**
 - If database has limited options, mention popular models generally (Swift, Nexon, Creta, etc.) 
@@ -59,11 +66,17 @@ Enhance the response above with your automotive expertise. Make it:
 - Be transparent about what you can/can't provide
 
 **Remember:**
-- Reference previous price ranges/preferences mentioned
+- ALWAYS reference previous price ranges/preferences mentioned in chat history
 - Handle Hindi/Hinglish naturally ("haan aur batao" = "tell me more in same context")
-- Never say "I don't recall" if it's in chat history
+- NEVER say "I don't recall" if it's in chat history
+- For vague queries, explicitly state what you're continuing from the previous conversation
 
-Now provide an enhanced, natural response:"""
+## Example for "haan aur batao" after "SUV under 15 lakhs":
+"Sure! Here are more SUV options under ₹15 lakhs that you might like:
+
+• [car details]..."
+
+Now provide an enhanced, natural response that explicitly references previous context:"""
 
 
 def get_refinement_llm():
@@ -115,13 +128,39 @@ def refine_response_with_llm(
             # No refinement LLM available, return original
             return rag_response
         
-        # Format chat history
+        # Format chat history with rich context extraction
         history_str = ""
         if chat_history and len(chat_history) > 0:
             history_lines = []
-            for q, a in chat_history[-3:]:  # Last 3 exchanges
+            # Extract key information from last 5 exchanges for better context
+            for q, a in chat_history[-5:]:  # Last 5 exchanges
                 history_lines.append(f"User: {q}")
-                history_lines.append(f"Assistant: {a[:200]}...")  # Truncate long responses
+                
+                # Extract key context from AI response
+                import re
+                context_parts = []
+                
+                # Extract price mentions
+                prices = re.findall(r'₹(\d+(?:\.\d+)?)\s*lakhs?', a)
+                if prices:
+                    context_parts.append(f"Price: ₹{prices[0]}L")
+                
+                # Extract body types
+                body_types = re.findall(r'\b(SUV|Sedan|Hatchback|MUV|Coupe)\b', a, re.IGNORECASE)
+                if body_types:
+                    context_parts.append(f"Type: {body_types[0]}")
+                
+                # Extract brands
+                brands = re.findall(r'\b(Tata|Mahindra|Maruti|Hyundai|Kia|Toyota|Honda)\b', a, re.IGNORECASE)
+                if brands:
+                    context_parts.append(f"Brand: {brands[0]}")
+                
+                # Build context-aware summary
+                if context_parts:
+                    history_lines.append(f"Assistant: [{', '.join(context_parts)}] {a[:250]}...")
+                else:
+                    history_lines.append(f"Assistant: {a[:250]}...")
+            
             history_str = "\n".join(history_lines)
         else:
             history_str = "No previous conversation"
