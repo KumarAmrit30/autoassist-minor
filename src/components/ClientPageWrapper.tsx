@@ -84,7 +84,7 @@ function MarketingShell({ children }: { children: ReactNode }) {
 
       {!isLoading && (
         <div className="min-h-screen bg-background">
-          <Header onSignInClick={() => setShowAuthModal(true)} />
+          <Header />
 
           <main className="pt-20 lg:pt-24 pb-16">{children}</main>
 

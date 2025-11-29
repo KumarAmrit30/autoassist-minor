@@ -26,12 +26,14 @@ type BenefitItem = {
 const benefitItems: BenefitItem[] = [
   {
     title: "Instant personalization",
-    description: "Sync favorites, wishlists, and car comparisons automatically.",
+    description:
+      "Sync favorites, wishlists, and car comparisons automatically.",
     icon: Sparkles,
   },
   {
     title: "Protected by Google",
-    description: "We rely on Google OAuth so you never manage another password.",
+    description:
+      "We rely on Google OAuth so you never manage another password.",
     icon: ShieldCheck,
   },
   {
@@ -166,8 +168,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <ArrowRight className="h-5 w-5 text-muted-foreground" />
                 </motion.button>
                 <p className="mt-4 text-xs text-muted-foreground">
-                  We&apos;ll re-enable login once deployment issues are resolved.
-                  Existing accounts remain safe.
+                  We&apos;ll re-enable login once deployment issues are
+                  resolved. Existing accounts remain safe.
                 </p>
               </div>
 
@@ -195,7 +197,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </div>
               </div>
 
-              <div className="text-center text-xs text-muted-foreground">
+              {/* <div className="text-center text-xs text-muted-foreground">
                 {isSignUp ? "Already on AutoAssist?" : "New to AutoAssist?"}{" "}
                 <button
                   onClick={() => setIsSignUp((prev) => !prev)}
@@ -203,7 +205,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 >
                   {isSignUp ? "Sign in" : "Create account"}
                 </button>
-              </div>
+              </div> */}
 
               <p className="text-center text-[11px] text-muted-foreground">
                 By continuing you agree to the AutoAssist{" "}

@@ -18,11 +18,7 @@ import { useComparison } from "@/contexts/comparison-context";
 import LogoutConfirmationModal from "@/components/ui/logout-confirmation-modal";
 import { usePathname, useRouter } from "next/navigation";
 
-interface HeaderProps {
-  onSignInClick: () => void;
-}
-
-export default function Header({ onSignInClick }: HeaderProps) {
+export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { comparisonCars } = useComparison();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -161,7 +157,7 @@ export default function Header({ onSignInClick }: HeaderProps) {
                 )}
               </motion.button>
 
-              {isAuthenticated ? (
+              {isAuthenticated && (
                 <div className="relative hidden sm:block user-menu-container">
                   <motion.button
                     onClick={() => setIsUserMenuOpen((prev) => !prev)}
@@ -226,16 +222,6 @@ export default function Header({ onSignInClick }: HeaderProps) {
                     </motion.div>
                   )}
                 </div>
-              ) : (
-                <motion.button
-                  onClick={onSignInClick}
-                  className="hidden sm:flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <User className="w-4 h-4" />
-                  <span>Sign In</span>
-                </motion.button>
               )}
 
               <button
@@ -291,7 +277,7 @@ export default function Header({ onSignInClick }: HeaderProps) {
                 )}
               </button>
 
-              {isAuthenticated ? (
+              {isAuthenticated && (
                 <div className="sm:hidden space-y-2">
                   <div className="flex items-center space-x-3 px-4 py-2 bg-muted rounded-lg">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
@@ -339,17 +325,6 @@ export default function Header({ onSignInClick }: HeaderProps) {
                     </button>
                   </div>
                 </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    onSignInClick();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="flex items-center space-x-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors duration-200 sm:hidden"
-                >
-                  <User className="w-4 h-4" />
-                  <span>Sign In</span>
-                </button>
               )}
             </div>
           </motion.div>
