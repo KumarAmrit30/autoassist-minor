@@ -113,7 +113,7 @@ export default function ExplorePage() {
                 <span className="text-sm text-muted-foreground">
                   Showing results for:{" "}
                   <span className="font-semibold text-foreground">
-                    "{searchParamValue}"
+                    &quot;{searchParamValue}&quot;
                   </span>
                 </span>
               </motion.div>

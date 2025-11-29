@@ -8,14 +8,28 @@ const RAG_API_URL = process.env.RAG_API_URL || "http://localhost:8000";
 
 interface RagChatRequest {
   query: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   session_id?: string;
+}
+
+interface RagRecommendation {
+  id?: string;
+  make?: string;
+  model?: string;
+  name?: string;
+  price?: number;
+  mileage?: number;
+  [key: string]: unknown;
+}
+
+interface RagSource {
+  [key: string]: unknown;
 }
 
 interface RagChatResponse {
   answer: string;
-  recommended: Array<Record<string, any>>;
-  sources: Array<Record<string, any>>;
+  recommended: RagRecommendation[];
+  sources: RagSource[];
 }
 
 /**
@@ -77,7 +91,7 @@ export async function POST(request: NextRequest) {
                    `http://localhost:${process.env.PORT || 3000}`;
     
     const enrichedRecommendations = await Promise.all(
-      data.recommended.map(async (rec: any, index: number) => {
+      data.recommended.map(async (rec: RagRecommendation, index: number) => {
         try {
           console.log(`[RAG] Processing recommendation ${index}:`, {
             keys: Object.keys(rec),

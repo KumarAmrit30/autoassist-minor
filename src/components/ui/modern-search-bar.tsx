@@ -32,16 +32,11 @@ export default function ModernSearchBar({
     }
   };
 
-  const handleAISearch = () => {
-    if (onAISearch) {
-      onAISearch(query.trim());
-    }
-  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      handleSubmit(e as any);
+      handleSubmit(e as unknown as React.FormEvent);
     }
   };
 

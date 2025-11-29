@@ -285,7 +285,7 @@ export async function GET(
       
       // Variant information
       variantCount: allVariants.length,
-      variants: allVariants.map((v: any) => ({
+      variants: allVariants.map((v: Record<string, unknown>) => ({
         _id: v._id.toString(),
         name: v["Identification Variant"] || "Unknown",
         price: v["Pricing Delhi Ex Showroom Price"] 

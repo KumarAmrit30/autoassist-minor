@@ -21,7 +21,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
-  recommendations?: any[];
+  recommendations?: Car[];
 }
 
 interface Chat {
@@ -54,12 +54,26 @@ export default function AIChatInterface({
   useEffect(() => {
     const savedChats = localStorage.getItem("ai_chats");
     if (savedChats) {
-      const parsed = JSON.parse(savedChats);
-      const chatsWithDates = parsed.map((chat: any) => ({
+      interface SavedChat {
+        id: string;
+        title: string;
+        createdAt: string;
+        updatedAt: string;
+        messages: Array<{
+          id: string;
+          role: "user" | "assistant";
+          content: string;
+          timestamp: string;
+          recommendations?: Car[];
+        }>;
+      }
+
+      const parsed: SavedChat[] = JSON.parse(savedChats);
+      const chatsWithDates = parsed.map((chat: SavedChat) => ({
         ...chat,
         createdAt: new Date(chat.createdAt),
         updatedAt: new Date(chat.updatedAt),
-        messages: chat.messages.map((msg: any) => ({
+        messages: chat.messages.map((msg) => ({
           ...msg,
           timestamp: new Date(msg.timestamp),
         })),
@@ -71,7 +85,8 @@ export default function AIChatInterface({
     if (initialQuery && chats.length === 0) {
       createNewChat(initialQuery);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery]);
 
   // Save chats to localStorage whenever they change
   useEffect(() => {
@@ -83,7 +98,7 @@ export default function AIChatInterface({
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chats, currentChatId]);
+  }, [chats.length, currentChatId]);
 
   // Handle initial query (only once when component mounts with initialQuery)
   useEffect(() => {
@@ -94,7 +109,8 @@ export default function AIChatInterface({
         setHasProcessedInitialQuery(true);
       }
     }
-  }, [initialQuery, currentChatId, hasProcessedInitialQuery, chats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery, currentChatId, hasProcessedInitialQuery]);
 
   const createNewChat = (firstMessage?: string) => {
     const newChat: Chat = {
@@ -165,9 +181,9 @@ export default function AIChatInterface({
       const response = await fetch("/api/ai/rag-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           query: text,
-          session_id: chatId  // This maintains chat history across messages
+          session_id: chatId, // This maintains chat history across messages
         }),
       });
 
@@ -459,7 +475,7 @@ function ChatMessage({ message }: { message: Message }) {
           {message.recommendations && message.recommendations.length > 0 && (
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {message.recommendations
-                .map((carData: any, idx: number) => {
+                .map((carData: Car, idx: number) => {
                   // API enriches recommendations by fetching full Car objects from MongoDB
                   // Check if enrichment was successful (has _id and proper structure)
                   if (!carData._id || !carData.brand) {

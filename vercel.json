@@ -6,8 +6,7 @@
   "devCommand": "npm run dev",
   "git": {
     "deploymentEnabled": {
-      "main": true,
-      "dev": true
+      "main": true
     }
   },
   "env": {

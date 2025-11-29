@@ -136,8 +136,17 @@ export async function GET(request: NextRequest) {
     const groupedCars = result[0]?.data || [];
 
     // Transform grouped data to Car format
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const transformedCars = groupedCars.map((group: any) => {
+    interface GroupedCarData {
+      _id: { brand: string; model: string };
+      baseVariant: Record<string, unknown>;
+      variants: Array<Record<string, unknown>>;
+      minPrice: number;
+      maxPrice: number;
+      variantCount: number;
+      avgMileage: number | null;
+    }
+    
+    const transformedCars = groupedCars.map((group: GroupedCarData) => {
       const baseVariant = group.baseVariant;
       const brand = group._id.brand || "Unknown";
       const model = group._id.model || "Unknown";
@@ -162,7 +171,7 @@ export async function GET(request: NextRequest) {
 
         // Metadata about variants
         variantCount: group.variantCount,
-        variants: group.variants.map((v: any) => ({
+        variants: group.variants.map((v: Record<string, unknown>) => ({
           _id: v._id.toString(),
           name: v["Identification Variant"] || "Unknown",
           price: v.priceInLakhs || 0,

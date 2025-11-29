@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { X as XIcon, Trash2, GitCompare, Check, ArrowLeft, Home, ChevronDown } from "lucide-react";
 import { Car } from "@/types/car";
@@ -51,7 +50,8 @@ export default function ComparePage() {
     if (comparisonCars.length > 0) {
       fetchVariantsForCars();
     }
-  }, [comparisonCars]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comparisonCars.length]);
 
   // Redirect if no cars to compare
   useEffect(() => {
@@ -202,8 +202,8 @@ export default function ComparePage() {
     return "/api/placeholder/400/300";
   };
 
-  const getValue = (car: Car, field: { key: string; format?: (v: any) => string }) => {
-    const value = (car as any)[field.key];
+  const getValue = (car: Car, field: { key: string; format?: (v: unknown) => string }) => {
+    const value = (car as Record<string, unknown>)[field.key];
     if (value === undefined || value === null) return "N/A";
     if (field.format) {
       return field.format(value);
@@ -357,7 +357,8 @@ export default function ComparePage() {
                       </div>
                       {comparisonCars.map((car) => {
                         const value = getValue(car, field);
-                        const isBoolean = typeof (car as any)[field.key] === "boolean";
+                        const carValue = (car as Record<string, unknown>)[field.key];
+                        const isBoolean = typeof carValue === "boolean";
                         return (
                           <div
                             key={car._id}
@@ -365,14 +366,14 @@ export default function ComparePage() {
                           >
                                 {isBoolean ? (
                                   <div className="flex items-center space-x-2">
-                                    {(car as any)[field.key] ? (
+                                    {carValue ? (
                                       <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
                                     ) : (
                                   <XIcon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                                 )}
                                 <span
                                   className={
-                                    (car as any)[field.key]
+                                    carValue
                                       ? "text-foreground font-medium"
                                       : "text-muted-foreground"
                                   }
