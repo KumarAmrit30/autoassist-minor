@@ -129,8 +129,8 @@ export default function ComparisonModal({
     return "/api/placeholder/400/300";
   };
 
-  const getValue = (car: Car, field: { key: string; format?: (v: any) => string }) => {
-    const value = (car as any)[field.key];
+  const getValue = (car: Car, field: { key: string; format?: (v: unknown) => string }) => {
+    const value = (car as Record<string, unknown>)[field.key];
     if (value === undefined || value === null) return "N/A";
     if (field.format) {
       return field.format(value);
@@ -198,7 +198,7 @@ export default function ComparisonModal({
                 }}
               >
                 <div className="p-4 border-r border-border bg-muted/50"></div>
-                {comparisonCars.map((car, index) => (
+                {comparisonCars.map((car) => (
                   <div
                     key={car._id}
                     className="p-4 border-r border-border last:border-r-0 relative"
@@ -250,7 +250,8 @@ export default function ComparisonModal({
                           </div>
                           {comparisonCars.map((car) => {
                             const value = getValue(car, field);
-                            const isBoolean = typeof (car as any)[field.key] === "boolean";
+                            const carValue = (car as Record<string, unknown>)[field.key];
+                            const isBoolean = typeof carValue === "boolean";
                             return (
                               <div
                                 key={car._id}
@@ -258,14 +259,14 @@ export default function ComparisonModal({
                               >
                                 {isBoolean ? (
                                   <div className="flex items-center space-x-2">
-                                    {(car as any)[field.key] ? (
+                                    {carValue ? (
                                       <Check className="w-4 h-4 text-green-500" />
                                     ) : (
                                       <XIcon className="w-4 h-4 text-muted-foreground" />
                                     )}
                                     <span
                                       className={
-                                        (car as any)[field.key]
+                                        carValue
                                           ? "text-foreground"
                                           : "text-muted-foreground"
                                       }

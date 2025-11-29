@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Sparkles,
   Loader2,
@@ -189,115 +189,116 @@ export default function RagRecommendationPanel({
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {response.recommendations.map((car, index) => {
                       // Convert the car data to match our Car type
+                      const carRecord = car as Record<string, unknown>;
                       const carData: Car = {
-                        _id: car._id || car.id,
-                        brand: car.brand || car.make || car.Make || "",
-                        model: car.model || car.Model || "",
-                        variant: car.variant || car.Variant || "",
-                        year: car.year || car.Year || 2024,
-                        bodyType: car.bodyType || car.BodyType || "",
-                        segment: car.segment || car.Segment || "",
-                        priceInLakhs: car.price || car.Price || car.priceInLakhs || 0,
+                        _id: (carRecord._id || carRecord.id) as string | undefined,
+                        brand: (carRecord.brand || carRecord.make || carRecord.Make || "") as string,
+                        model: (carRecord.model || carRecord.Model || "") as string,
+                        variant: (carRecord.variant || carRecord.Variant || "") as string,
+                        year: (carRecord.year || carRecord.Year || 2024) as number,
+                        bodyType: (carRecord.bodyType || carRecord.BodyType || "") as string,
+                        segment: (carRecord.segment || carRecord.Segment || "") as string,
+                        priceInLakhs: (carRecord.price || carRecord.Price || carRecord.priceInLakhs || 0) as number,
                         
                         // Dimensions
-                        length: car.length || 4000,
-                        width: car.width || 1700,
-                        height: car.height || 1500,
-                        wheelbase: car.wheelbase || 2500,
-                        groundClearance: car.groundClearance || 165,
-                        weight: car.weight || 1200,
-                        turningRadius: car.turningRadius || 5,
-                        fuelTank: car.fuelTank || 45,
+                        length: (carRecord.length || 4000) as number,
+                        width: (carRecord.width || 1700) as number,
+                        height: (carRecord.height || 1500) as number,
+                        wheelbase: (carRecord.wheelbase || 2500) as number,
+                        groundClearance: (carRecord.groundClearance || 165) as number,
+                        weight: (carRecord.weight || 1200) as number,
+                        turningRadius: (carRecord.turningRadius || 5) as number,
+                        fuelTank: (carRecord.fuelTank || 45) as number,
                         
                         // Engine
-                        displacement: car.displacement || 1000,
-                        cylinders: car.cylinders || 3,
-                        turboNA: (car.turboNA || "NA") as "Turbo" | "NA",
-                        powerBhp: car.powerBhp || car.power || 60,
-                        torqueNm: car.torqueNm || 90,
+                        displacement: (carRecord.displacement || 1000) as number,
+                        cylinders: (carRecord.cylinders || 3) as number,
+                        turboNA: ((carRecord.turboNA || "NA") as "Turbo" | "NA"),
+                        powerBhp: (carRecord.powerBhp || carRecord.power || 60) as number,
+                        torqueNm: (carRecord.torqueNm || 90) as number,
                         
                         // Transmission
-                        transmissionType: (car.transmission || car.transmissionType || "Manual") as any,
+                        transmissionType: (car.transmission || car.transmissionType || "Manual") as Car["transmissionType"],
                         gearCount: car.gearCount || 5,
-                        driveType: (car.driveType || "FWD") as any,
+                        driveType: (car.driveType || "FWD") as Car["driveType"],
                         
                         // Performance
-                        acceleration0to100: car.acceleration0to100 || 12,
-                        topSpeed: car.topSpeed || 180,
+                        acceleration0to100: (carRecord.acceleration0to100 || 12) as number,
+                        topSpeed: (carRecord.topSpeed || 180) as number,
                         
                         // Fuel
-                        mileageARAI: car.mileage || car.Mileage || car.mileageARAI || 15,
-                        emissionStandard: car.emissionStandard || "BS6",
-                        adBlueSystem: car.adBlueSystem || false,
+                        mileageARAI: (carRecord.mileage || carRecord.Mileage || carRecord.mileageARAI || 15) as number,
+                        emissionStandard: (carRecord.emissionStandard || "BS6") as string,
+                        adBlueSystem: (carRecord.adBlueSystem || false) as boolean,
                         
                         // Safety
-                        airbags: car.airbags || 2,
-                        abs: car.abs !== false,
-                        esc: car.esc !== false,
-                        crashTestRating: car.crashTestRating || car.rating || 4,
-                        parkingSensors: car.parkingSensors || false,
-                        parkingCamera: car.parkingCamera || false,
-                        isofix: car.isofix || false,
-                        hillHoldControl: car.hillHoldControl || false,
-                        tractionControl: car.tractionControl || false,
-                        electronicBrakeDistribution: car.electronicBrakeDistribution !== false,
+                        airbags: (carRecord.airbags || 2) as number,
+                        abs: (carRecord.abs !== false) as boolean,
+                        esc: (carRecord.esc !== false) as boolean,
+                        crashTestRating: (carRecord.crashTestRating || carRecord.rating || 4) as number,
+                        parkingSensors: (carRecord.parkingSensors || false) as boolean,
+                        parkingCamera: (carRecord.parkingCamera || false) as boolean,
+                        isofix: (carRecord.isofix || false) as boolean,
+                        hillHoldControl: (carRecord.hillHoldControl || false) as boolean,
+                        tractionControl: (carRecord.tractionControl || false) as boolean,
+                        electronicBrakeDistribution: (carRecord.electronicBrakeDistribution !== false) as boolean,
                         
                         // Comfort
-                        airConditioning: car.airConditioning !== false,
-                        ventilatedSeats: car.ventilatedSeats || false,
-                        keylessEntry: car.keylessEntry || false,
-                        cruiseControl: car.cruiseControl || false,
-                        sunroof: car.sunroof || false,
-                        heatedSeats: car.heatedSeats || false,
-                        lumbarSupport: car.lumbarSupport || false,
-                        adjustableHeadrest: car.adjustableHeadrest !== false,
-                        rearArmrest: car.rearArmrest || false,
-                        cupHolders: car.cupHolders || 2,
-                        powerWindows: car.powerWindows !== false,
-                        centralLocking: car.centralLocking !== false,
+                        airConditioning: (carRecord.airConditioning !== false) as boolean,
+                        ventilatedSeats: (carRecord.ventilatedSeats || false) as boolean,
+                        keylessEntry: (carRecord.keylessEntry || false) as boolean,
+                        cruiseControl: (carRecord.cruiseControl || false) as boolean,
+                        sunroof: (carRecord.sunroof || false) as boolean,
+                        heatedSeats: (carRecord.heatedSeats || false) as boolean,
+                        lumbarSupport: (carRecord.lumbarSupport || false) as boolean,
+                        adjustableHeadrest: (carRecord.adjustableHeadrest !== false) as boolean,
+                        rearArmrest: (carRecord.rearArmrest || false) as boolean,
+                        cupHolders: (carRecord.cupHolders || 2) as number,
+                        powerWindows: (carRecord.powerWindows !== false) as boolean,
+                        centralLocking: (carRecord.centralLocking !== false) as boolean,
                         
                         // Infotainment
-                        touchscreenSize: car.touchscreenSize || 7,
-                        carPlayAndroidAuto: car.carPlayAndroidAuto || false,
-                        speakers: car.speakers || 4,
-                        digitalCluster: car.digitalCluster || false,
-                        connectedTech: car.connectedTech || false,
-                        wirelessCharging: car.wirelessCharging || false,
-                        usbPorts: car.usbPorts || 2,
-                        bluetoothConnectivity: car.bluetoothConnectivity !== false,
+                        touchscreenSize: (carRecord.touchscreenSize || 7) as number,
+                        carPlayAndroidAuto: (carRecord.carPlayAndroidAuto || false) as boolean,
+                        speakers: (carRecord.speakers || 4) as number,
+                        digitalCluster: (carRecord.digitalCluster || false) as boolean,
+                        connectedTech: (carRecord.connectedTech || false) as boolean,
+                        wirelessCharging: (carRecord.wirelessCharging || false) as boolean,
+                        usbPorts: (carRecord.usbPorts || 2) as number,
+                        bluetoothConnectivity: (carRecord.bluetoothConnectivity !== false) as boolean,
                         
                         // Practicality
-                        bootSpace: car.bootSpace || 350,
-                        foldableSeats: car.foldableSeats !== false,
-                        roofRails: car.roofRails || false,
-                        spareWheel: (car.spareWheel || "Full") as any,
+                        bootSpace: (carRecord.bootSpace || 350) as number,
+                        foldableSeats: (carRecord.foldableSeats !== false) as boolean,
+                        roofRails: (carRecord.roofRails || false) as boolean,
+                        spareWheel: ((carRecord.spareWheel || "Full") as Car["spareWheel"]),
                         
                         // Exterior
-                        wheelSize: car.wheelSize || 15,
-                        ledHeadlights: car.ledHeadlights || false,
-                        drl: car.drl || false,
-                        fogLamps: car.fogLamps || false,
-                        autoFoldingMirrors: car.autoFoldingMirrors || false,
-                        alloyWheels: car.alloyWheels || false,
+                        wheelSize: (carRecord.wheelSize || 15) as number,
+                        ledHeadlights: (carRecord.ledHeadlights || false) as boolean,
+                        drl: (carRecord.drl || false) as boolean,
+                        fogLamps: (carRecord.fogLamps || false) as boolean,
+                        autoFoldingMirrors: (carRecord.autoFoldingMirrors || false) as boolean,
+                        alloyWheels: (carRecord.alloyWheels || false) as boolean,
                         
                         // ADAS
-                        adaptiveCruise: car.adaptiveCruise || false,
-                        laneKeepAssist: car.laneKeepAssist || false,
-                        collisionWarning: car.collisionWarning || false,
-                        automaticEmergencyBraking: car.automaticEmergencyBraking || false,
-                        blindSpotMonitor: car.blindSpotMonitor || false,
-                        rearCrossTrafficAlert: car.rearCrossTrafficAlert || false,
-                        driverAttentionAlert: car.driverAttentionAlert || false,
+                        adaptiveCruise: (carRecord.adaptiveCruise || false) as boolean,
+                        laneKeepAssist: (carRecord.laneKeepAssist || false) as boolean,
+                        collisionWarning: (carRecord.collisionWarning || false) as boolean,
+                        automaticEmergencyBraking: (carRecord.automaticEmergencyBraking || false) as boolean,
+                        blindSpotMonitor: (carRecord.blindSpotMonitor || false) as boolean,
+                        rearCrossTrafficAlert: (carRecord.rearCrossTrafficAlert || false) as boolean,
+                        driverAttentionAlert: (carRecord.driverAttentionAlert || false) as boolean,
                         
                         // Ownership
-                        warranty: car.warranty || "3 Years/1,00,000 km",
-                        serviceInterval: car.serviceInterval || 10000,
-                        roadsideAssistance: car.roadsideAssistance !== false,
+                        warranty: (carRecord.warranty || "3 Years/1,00,000 km") as string,
+                        serviceInterval: (carRecord.serviceInterval || 10000) as number,
+                        roadsideAssistance: (carRecord.roadsideAssistance !== false) as boolean,
                         
                         // Additional
-                        images: car.images || [],
-                        rating: car.rating || car.crashTestRating || 4,
-                        reviewCount: car.reviewCount || 0,
+                        images: (carRecord.images || []) as string[],
+                        rating: (carRecord.rating || carRecord.crashTestRating || 4) as number,
+                        reviewCount: (carRecord.reviewCount || 0) as number,
                       };
                       
                       return (

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -21,9 +20,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({
   onSearch,
-  onFilterClick,
 }: HeroSectionProps) {
-  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAISearch = (query: string) => {
     onSearch(query, true);

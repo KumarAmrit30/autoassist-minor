@@ -15,7 +15,6 @@ import {
   X,
   Fuel,
   Gauge,
-  Calendar,
   Users,
   Shield,
   Zap,
@@ -887,7 +886,7 @@ function StatCard({
 }: {
   label: string;
   value: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
     <div className="bg-card border border-border rounded-xl p-4">

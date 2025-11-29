@@ -4,18 +4,14 @@
 
 export interface RagChatRequest {
   query: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   session_id?: string;
 }
 
 export interface RagChatResponse {
   response: string;
-  recommendations: Array<{
-    [key: string]: any;
-  }>;
-  sources: Array<{
-    [key: string]: any;
-  }>;
+  recommendations: Array<Record<string, unknown>>;
+  sources: Array<Record<string, unknown>>;
   metadata: {
     sessionId: string;
     timestamp: string;
@@ -25,7 +21,7 @@ export interface RagChatResponse {
 
 export interface RagHealthResponse {
   status: "healthy" | "unhealthy";
-  backend?: any;
+  backend?: Record<string, unknown>;
   url?: string;
   error?: string;
 }
@@ -43,7 +39,7 @@ export class RagClient {
    */
   async chat(
     query: string,
-    filters?: Record<string, any>
+    filters?: Record<string, unknown>
   ): Promise<RagChatResponse> {
     try {
       const response = await fetch(this.baseUrl, {
